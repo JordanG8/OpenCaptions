@@ -1,0 +1,23 @@
+# Virtual Environment
+python/venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Audio/SRT temp files
+*.wav
+*.srt
+
+# macOS
+.DS_Store
+
+# Adobe debug config (user-specific port)
+.debug
+
+# Claude Code dev settings
+.claude/
+
+# Pip install artifacts
+=*

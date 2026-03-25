@@ -1,0 +1,324 @@
+"""
+transcriber.py — Multi-backend GPU-accelerated Hebrew transcription.
+
+Backends (tried in priority order):
+  1. NVIDIA CUDA  — faster-whisper + CTranslate2 (fastest)
+  2. DirectML     — openai-whisper + torch-directml (AMD / Intel / any DX12 GPU)
+  3. CPU          — faster-whisper int8 (last resort)
+
+Usage:  python transcriber.py <input.wav> <output.srt> [max_words] [do_rtl_fix]
+"""
+
+import sys
+import os
+import time
+import re
+import subprocess
+import json
+
+# Ensure UTF-8 output
+sys.stdout.reconfigure(encoding='utf-8')
+
+
+# ── GPU Detection ─────────────────────────────────────────────
+
+def detect_gpu_vendor():
+    """Detect primary GPU vendor via Windows WMI. Returns 'nvidia', 'amd', 'intel', or 'unknown'."""
+    if sys.platform != "win32":
+        return "unknown"
+    try:
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-CimInstance Win32_VideoController | Select-Object Name | ConvertTo-Json"],
+            capture_output=True, text=True, timeout=10
+        )
+        gpus = json.loads(result.stdout)
+        if not isinstance(gpus, list):
+            gpus = [gpus]
+
+        # Prefer discrete GPUs: check NVIDIA first, then AMD, then Intel
+        for gpu in gpus:
+            name = gpu.get("Name", "").upper()
+            if "NVIDIA" in name:
+                return "nvidia"
+        for gpu in gpus:
+            name = gpu.get("Name", "").upper()
+            if "AMD" in name or "RADEON" in name:
+                return "amd"
+        for gpu in gpus:
+            name = gpu.get("Name", "").upper()
+            if "INTEL" in name:
+                return "intel"
+        return "unknown"
+    except Exception:
+        return "unknown"
+
+
+# ── NVIDIA CUDA DLL Setup ────────────────────────────────────
+
+def setup_cuda_paths():
+    """Robustly locate and register CUDA DLL directories on Windows."""
+    if sys.platform != "win32":
+        return
+
+    dll_dirs = set()
+
+    # 1. pip-installed nvidia namespace packages (nvidia-cublas-cu12, nvidia-cudnn-cu12, etc.)
+    try:
+        import importlib.util
+        for pkg in ["nvidia.cublas", "nvidia.cudnn", "nvidia.cuda_runtime",
+                     "nvidia.cufft", "nvidia.curand", "nvidia.cusolver", "nvidia.cusparse"]:
+            spec = importlib.util.find_spec(pkg)
+            if spec and spec.submodule_search_locations:
+                for loc in spec.submodule_search_locations:
+                    for leaf in ("bin", "lib"):
+                        d = os.path.join(loc, leaf)
+                        if os.path.isdir(d):
+                            dll_dirs.add(d)
+    except Exception:
+        pass
+
+    # 2. Scan site-packages/nvidia/* for bin/lib folders
+    try:
+        import site
+        search = list(site.getsitepackages())
+        usp = site.getusersitepackages()
+        if isinstance(usp, str):
+            search.append(usp)
+        for sp in search:
+            nvidia_dir = os.path.join(sp, "nvidia")
+            if os.path.isdir(nvidia_dir):
+                for subdir in os.listdir(nvidia_dir):
+                    for leaf in ("bin", "lib"):
+                        d = os.path.join(nvidia_dir, subdir, leaf)
+                        if os.path.isdir(d):
+                            dll_dirs.add(d)
+    except Exception:
+        pass
+
+    # 3. CUDA Toolkit system installation
+    cuda_path = os.environ.get("CUDA_PATH", "")
+    if cuda_path:
+        d = os.path.join(cuda_path, "bin")
+        if os.path.isdir(d):
+            dll_dirs.add(d)
+
+    # 4. Common CUDA Toolkit install location
+    prog = os.environ.get("ProgramFiles", r"C:\Program Files")
+    cuda_base = os.path.join(prog, "NVIDIA GPU Computing Toolkit", "CUDA")
+    if os.path.isdir(cuda_base):
+        for ver in sorted(os.listdir(cuda_base), reverse=True):
+            d = os.path.join(cuda_base, ver, "bin")
+            if os.path.isdir(d):
+                dll_dirs.add(d)
+                break  # latest version only
+
+    # 5. cuDNN standalone install
+    cudnn_path = os.environ.get("CUDNN_PATH", "")
+    if cudnn_path:
+        d = os.path.join(cudnn_path, "bin")
+        if os.path.isdir(d):
+            dll_dirs.add(d)
+
+    # Register all directories
+    for d in dll_dirs:
+        if d not in os.environ.get("PATH", ""):
+            os.environ["PATH"] = d + os.pathsep + os.environ["PATH"]
+        if hasattr(os, "add_dll_directory"):
+            try:
+                os.add_dll_directory(d)
+            except OSError:
+                pass
+
+
+# ── Backend: faster-whisper + CUDA (NVIDIA) ───────────────────
+
+def transcribe_cuda(input_file, language, beam_size):
+    """Transcribe with faster-whisper on NVIDIA CUDA GPU."""
+    setup_cuda_paths()
+    from faster_whisper import WhisperModel
+
+    print("Backend: faster-whisper (NVIDIA CUDA)")
+    model = WhisperModel("medium", device="cuda", compute_type="float16")
+
+    segments, info = model.transcribe(
+        input_file, language=language, beam_size=beam_size, word_timestamps=True
+    )
+    print(f"משך הסרטון: {info.duration:.2f} שניות")
+
+    words = []
+    for segment in segments:
+        words.extend(segment.words)
+    return words
+
+
+# ── Backend: openai-whisper + DirectML (AMD / Intel / any DX12) ──
+
+def transcribe_directml(input_file, language, beam_size):
+    """Transcribe with openai-whisper on DirectML GPU (works for AMD, Intel, NVIDIA)."""
+    import torch
+    import torch_directml
+    import whisper
+
+    print("Backend: openai-whisper + DirectML (GPU)")
+    dml_device = torch_directml.device()
+    print(f"DirectML device: {dml_device}")
+
+    # Load model on CPU first, then move to DirectML
+    model = whisper.load_model("medium", device="cpu")
+    model = model.to(dml_device)
+
+    # Get audio duration for logging
+    import whisper.audio
+    audio = whisper.audio.load_audio(input_file)
+    duration = len(audio) / whisper.audio.SAMPLE_RATE
+    print(f"משך הסרטון: {duration:.2f} שניות")
+
+    # Transcribe — word_timestamps gives per-word timing
+    result = model.transcribe(
+        input_file,
+        language=language,
+        beam_size=beam_size,
+        word_timestamps=True,
+        fp16=False,  # DirectML works best with float32
+    )
+
+    # Convert to word objects matching our SRT writer interface
+    words = []
+    for seg in result.get("segments", []):
+        for w in seg.get("words", []):
+            words.append(_WordObj(w["word"], w["start"], w["end"]))
+    return words
+
+
+# ── Backend: faster-whisper CPU (last resort) ─────────────────
+
+def transcribe_cpu(input_file, language, beam_size):
+    """Transcribe with faster-whisper on CPU (no GPU acceleration)."""
+    from faster_whisper import WhisperModel
+
+    print("Backend: faster-whisper (CPU fallback)")
+    model = WhisperModel("medium", device="cpu", compute_type="int8")
+
+    segments, info = model.transcribe(
+        input_file, language=language, beam_size=beam_size, word_timestamps=True
+    )
+    print(f"משך הסרטון: {info.duration:.2f} שניות")
+
+    words = []
+    for segment in segments:
+        words.extend(segment.words)
+    return words
+
+
+# ── Shared helpers ────────────────────────────────────────────
+
+class _WordObj:
+    """Lightweight word container for the DirectML backend."""
+    __slots__ = ("word", "start", "end")
+    def __init__(self, word, start, end):
+        self.word = word
+        self.start = start
+        self.end = end
+
+
+def fix_hebrew_rtl(text):
+    """Move trailing punctuation to the front for RTL SRT display."""
+    if not text:
+        return text
+    if not re.search(r'[\u0590-\u05FF]', text):
+        return text
+    m = re.search(r'([.?!,]+)$', text)
+    if m:
+        punc = m.group(1)
+        return punc + text[:-len(punc)]
+    return text
+
+
+def format_timestamp(seconds):
+    td = time.gmtime(seconds)
+    ms = int((seconds % 1) * 1000)
+    return f"{time.strftime('%H:%M:%S', td)},{ms:03d}"
+
+
+def write_srt(words, output_file, max_words, do_rtl_fix):
+    """Write words to SRT file, grouped by max_words per subtitle."""
+    with open(output_file, "w", encoding="utf-8-sig") as f:
+        counter = 1
+        for i in range(0, len(words), max_words):
+            chunk = words[i:i + max_words]
+            start = chunk[0].start
+            end = chunk[-1].end
+
+            phrase = " ".join(w.word.strip() for w in chunk)
+            if do_rtl_fix:
+                phrase = fix_hebrew_rtl(phrase)
+
+            f.write(f"{counter}\n")
+            f.write(f"{format_timestamp(start)} --> {format_timestamp(end)}\n")
+            f.write(f"{phrase}\n\n")
+
+            print(f"[{format_timestamp(start)}] {phrase}")
+            counter += 1
+
+
+# ── Main ──────────────────────────────────────────────────────
+
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: transcriber.py <input.wav> <output.srt> [max_words] [do_rtl_fix]")
+        return
+
+    input_file  = sys.argv[1]
+    output_file = sys.argv[2]
+    max_words   = int(sys.argv[3]) if len(sys.argv) > 3 else 7
+    do_rtl_fix  = sys.argv[4].lower() == "true" if len(sys.argv) > 4 else False
+
+    print(f"טוען מודל בינה מלאכותית... (תיקון עברית: {'פעיל' if do_rtl_fix else 'כבוי'})")
+
+    # Detect GPU vendor
+    vendor = detect_gpu_vendor()
+    print(f"GPU: {vendor}")
+
+    # Build backend priority list based on detected GPU
+    if vendor == "nvidia":
+        backends = [
+            ("CUDA",     transcribe_cuda),
+            ("DirectML", transcribe_directml),
+            ("CPU",      transcribe_cpu),
+        ]
+    elif vendor in ("amd", "intel"):
+        backends = [
+            ("DirectML", transcribe_directml),
+            ("CPU",      transcribe_cpu),
+        ]
+    else:
+        backends = [
+            ("DirectML", transcribe_directml),
+            ("CUDA",     transcribe_cuda),
+            ("CPU",      transcribe_cpu),
+        ]
+
+    # Try each backend until one succeeds
+    words = None
+    for name, fn in backends:
+        try:
+            print(f"מתחיל תמלול ({name}): {os.path.basename(input_file)}")
+            words = fn(input_file, "he", 5)
+            break
+        except Exception as e:
+            print(f"{name} backend failed: {e}")
+            continue
+
+    if not words:
+        print("ERROR: All transcription backends failed!")
+        sys.exit(1)
+
+    write_srt(words, output_file, max_words, do_rtl_fix)
+    print("SUCCESS: התמלול הסתיים!")
+    # Force exit to prevent GPU library teardown crash
+    os._exit(0)
+
+
+if __name__ == "__main__":
+    main()

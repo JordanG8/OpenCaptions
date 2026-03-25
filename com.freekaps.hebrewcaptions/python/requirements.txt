@@ -1,0 +1,16 @@
+# Base requirement (always needed for NVIDIA + CPU fallback)
+faster-whisper>=1.0.0
+
+# ── NVIDIA GPU (install these for CUDA acceleration) ──
+# nvidia-cublas-cu12
+# nvidia-cudnn-cu12
+# nvidia-cuda-runtime-cu12
+
+# ── AMD / Intel GPU (install these for DirectML acceleration) ──
+# torch>=2.1.0
+# torchaudio>=2.1.0
+# torch-directml>=0.2.5
+# openai-whisper>=20231117
+
+# TIP: Run "python install_deps.py" to auto-detect your GPU
+#      and install the correct packages automatically.
