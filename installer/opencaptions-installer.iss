@@ -57,12 +57,13 @@ Root: HKCU; Subkey: "SOFTWARE\Adobe\CSXS.13"; ValueName: "PlayerDebugMode"; Valu
 
 [Run]
 ; Post-install: Install Python dependencies using BUNDLED Python (auto-detect GPU)
-Filename: "{app}\vendor\python\python.exe"; Parameters: """{app}\python\install_deps.py"""; \
-  StatusMsg: "Installing AI packages — this may take 5-10 minutes..."; \
-  Flags: runhidden waituntilterminated
+; Console window is visible so user can see download progress and disk stats
+Filename: "{app}\vendor\python\python.exe"; Parameters: "-u ""{app}\python\install_deps.py"""; \
+  StatusMsg: "Installing AI packages (see console window for progress)..."; \
+  Flags: waituntilterminated
 ; Post-install: Download AI model using BUNDLED Python
-Filename: "{app}\vendor\python\python.exe"; Parameters: """{app}\python\download_model.py"""; \
-  StatusMsg: "Downloading AI model (~1-2 GB, one-time)..."; \
+Filename: "{app}\vendor\python\python.exe"; Parameters: "-u ""{app}\python\download_model.py"""; \
+  StatusMsg: "Downloading AI model (see console window for progress)..."; \
   Description: "Download AI model (required, ~1-2 GB)"; \
   Flags: postinstall waituntilterminated
 

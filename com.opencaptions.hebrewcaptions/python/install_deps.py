@@ -12,6 +12,46 @@ import subprocess
 import sys
 import json
 import os
+import shutil
+import time
+
+# Ensure unbuffered output
+sys.stdout.reconfigure(encoding='utf-8', line_buffering=True)
+
+
+def set_title(title):
+    """Set console window title on Windows."""
+    if sys.platform == "win32":
+        os.system(f"title {title}")
+
+
+def disk_stats():
+    """Return free disk space string for the drive where packages are installed."""
+    try:
+        site_pkg = os.path.dirname(os.path.abspath(__file__))
+        usage = shutil.disk_usage(site_pkg)
+        free_gb = usage.free / (1024 ** 3)
+        total_gb = usage.total / (1024 ** 3)
+        used_pct = (usage.used / usage.total) * 100
+        return f"{free_gb:.1f} GB free / {total_gb:.1f} GB total ({used_pct:.0f}% used)"
+    except Exception:
+        return "unknown"
+
+
+def dir_size_mb(path):
+    """Get directory size in MB."""
+    total = 0
+    try:
+        for dirpath, dirnames, filenames in os.walk(path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                try:
+                    total += os.path.getsize(fp)
+                except OSError:
+                    pass
+    except Exception:
+        pass
+    return total / (1024 * 1024)
 
 
 def detect_gpu():
@@ -48,78 +88,81 @@ def detect_gpu():
         return "cpu"
 
 
-def pip_install(packages, desc):
-    """Run pip install for a list of packages."""
-    print(f"\n{'='*50}")
-    print(f"Installing {desc}...")
-    print(f"{'='*50}")
-    cmd = [sys.executable, "-m", "pip", "install", "--upgrade"] + packages
-    print(f"  > {' '.join(cmd)}\n")
+def pip_install(packages, desc, step, total_steps):
+    """Run pip install for a list of packages with progress stats."""
+    set_title(f"OpenCaptions — Installing {desc} [{step}/{total_steps}]")
+
+    print(f"\n{'='*60}")
+    print(f"  [{step}/{total_steps}] Installing {desc}...")
+    print(f"  Disk: {disk_stats()}")
+    print(f"{'='*60}\n")
+
+    cmd = [sys.executable, "-m", "pip", "install", "--upgrade",
+           "--progress-bar", "on"] + packages
+    start = time.time()
     result = subprocess.run(cmd)
+    elapsed = time.time() - start
+
     if result.returncode != 0:
-        print(f"WARNING: Some packages in '{desc}' may have failed to install.")
+        print(f"\n  WARNING: Some packages in '{desc}' may have failed.")
         return False
+
+    print(f"\n  Done in {elapsed:.0f}s — Disk: {disk_stats()}")
     return True
 
 
 def install_nvidia():
     """Install packages for NVIDIA CUDA GPU."""
-    print("\nDetected: NVIDIA GPU")
-    print("Installing faster-whisper with CUDA support...\n")
+    print("\n  Detected: NVIDIA GPU")
+    print("  Installing faster-whisper with CUDA support...\n")
 
-    # Core transcription engine
-    pip_install(["faster-whisper>=1.0.0"], "faster-whisper")
-
-    # CUDA runtime libraries (DLLs for cublas, cudnn, etc.)
+    pip_install(["faster-whisper>=1.0.0"], "faster-whisper", 1, 2)
     pip_install([
         "nvidia-cublas-cu12",
         "nvidia-cudnn-cu12",
         "nvidia-cuda-runtime-cu12",
-    ], "NVIDIA CUDA libraries")
+    ], "NVIDIA CUDA libraries", 2, 2)
 
-    print("\n" + "="*50)
-    print("NVIDIA setup complete!")
-    print("If you still get CUDA errors, install the NVIDIA CUDA Toolkit:")
-    print("  https://developer.nvidia.com/cuda-downloads")
-    print("="*50)
+    print("\n" + "="*60)
+    print("  NVIDIA setup complete!")
+    print("="*60)
 
 
 def install_directml():
     """Install packages for AMD/Intel DirectML GPU."""
-    print("\nDetected: AMD / Intel GPU")
-    print("Installing openai-whisper with DirectML GPU support...\n")
+    print("\n  Detected: AMD / Intel GPU")
+    print("  Installing openai-whisper with DirectML GPU support...\n")
 
-    # PyTorch + DirectML (order matters: torch first, then directml)
-    pip_install(["torch>=2.1.0", "torchaudio>=2.1.0"], "PyTorch")
-    pip_install(["torch-directml>=0.2.5"], "DirectML backend")
+    pip_install(["torch>=2.1.0", "torchaudio>=2.1.0"], "PyTorch", 1, 4)
+    pip_install(["torch-directml>=0.2.5"], "DirectML backend", 2, 4)
+    pip_install(["openai-whisper>=20231117"], "OpenAI Whisper", 3, 4)
+    pip_install(["faster-whisper>=1.0.0"], "faster-whisper (CPU fallback)", 4, 4)
 
-    # OpenAI Whisper (uses the already-installed torch)
-    pip_install(["openai-whisper>=20231117"], "OpenAI Whisper")
-
-    # Also install faster-whisper for CPU fallback
-    pip_install(["faster-whisper>=1.0.0"], "faster-whisper (CPU fallback)")
-
-    print("\n" + "="*50)
-    print("DirectML setup complete!")
-    print("Supported: AMD Radeon, Intel Arc, and any DirectX 12 GPU.")
-    print("="*50)
+    print("\n" + "="*60)
+    print("  DirectML setup complete!")
+    print("="*60)
 
 
 def install_cpu():
     """Install CPU-only packages (minimal)."""
-    print("\nInstalling CPU-only packages...")
-    pip_install(["faster-whisper>=1.0.0"], "faster-whisper (CPU)")
+    print("\n  Installing CPU-only packages...")
+    pip_install(["faster-whisper>=1.0.0"], "faster-whisper (CPU)", 1, 1)
 
-    print("\n" + "="*50)
-    print("CPU-only setup complete.")
-    print("="*50)
+    print("\n" + "="*60)
+    print("  CPU-only setup complete.")
+    print("="*60)
 
 
 def main():
-    print("OpenCaptions — GPU Dependency Installer")
-    print("="*50)
+    set_title("OpenCaptions — Installing AI packages")
 
-    # Allow manual override via command-line argument
+    print()
+    print("  " + "="*56)
+    print("    OpenCaptions — AI Package Installer")
+    print("  " + "="*56)
+    print(f"  Python: {sys.executable}")
+    print(f"  Disk:   {disk_stats()}")
+
     if len(sys.argv) > 1:
         vendor = sys.argv[1].lower()
     else:
@@ -132,7 +175,9 @@ def main():
     else:
         install_cpu()
 
-    print("\nDone! You can now use the OpenCaptions plugin in Premiere Pro.")
+    print(f"\n  Final disk: {disk_stats()}")
+    print("  Done! You can now use the OpenCaptions plugin in Premiere Pro.")
+    print()
 
 
 if __name__ == "__main__":
