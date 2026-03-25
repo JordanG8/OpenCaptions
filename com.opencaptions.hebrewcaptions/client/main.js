@@ -74,8 +74,18 @@ function initPaths() {
     tmpDir    = os.tmpdir();
     wavPath   = path.join(tmpDir, "opencaptions_audio.wav");
     srtPath   = path.join(tmpDir, "opencaptions_captions.srt");
-    
-    pythonCmd  = os.platform() === "win32" ? "python" : "python3";
+
+    // Use bundled Python + FFmpeg if available (installed by the installer)
+    var vendorPython = path.join(extRoot, "vendor", "python", "python.exe");
+    var vendorFFmpeg = path.join(extRoot, "vendor", "ffmpeg");
+
+    if (os.platform() === "win32" && fs.existsSync(vendorPython)) {
+        pythonCmd = vendorPython;
+        // Add bundled FFmpeg to PATH so faster-whisper can find it
+        process.env.PATH = vendorFFmpeg + ";" + process.env.PATH;
+    } else {
+        pythonCmd = os.platform() === "win32" ? "python" : "python3";
+    }
     return true;
 }
 

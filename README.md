@@ -7,8 +7,7 @@
 </p>
 
 <p align="center">
-  <em>One-click installer. No terminal needed.</em><br>
-  <sub>Requires Python 3.10+ and FFmpeg on PATH</sub>
+  <em>One-click installer. Python and FFmpeg included — nothing else to install.</em>
 </p>
 
 ---
@@ -22,13 +21,14 @@
 - **GPU accelerated** — NVIDIA (CUDA), AMD (DirectML), and Intel GPUs supported
 - **Track selection** — choose which audio track to transcribe
 - **100% local & private** — no cloud APIs, no subscriptions
+- **Self-contained** — Python and FFmpeg are bundled, no manual setup
 
 ## What the installer does
 
 The Windows installer automatically:
-1. Copies the extension to your Adobe CEP extensions folder
+1. Copies the extension (with bundled Python + FFmpeg) to your Adobe CEP extensions folder
 2. Sets the required registry keys (PlayerDebugMode)
-3. Installs the correct Python packages for your GPU
+3. Installs the correct AI packages for your GPU (requires internet on first install)
 4. Downloads the AI model (~1-2 GB, one-time)
 
 After install, restart Premiere Pro and go to **Window > Extensions > OpenCaptions**.
@@ -47,8 +47,9 @@ The extension auto-detects your GPU and uses the best available backend.
 ## Prerequisites
 
 - **Adobe Premiere Pro 2020+**
-- **Python 3.10+** — [Download](https://www.python.org/downloads/) (check "Add to PATH" during install)
-- **FFmpeg** — [Download](https://ffmpeg.org/download.html) (add to system PATH)
+- **Internet connection** (first install only — for AI packages and model download)
+
+That's it. Python and FFmpeg are bundled in the installer.
 
 ## Manual Install (advanced)
 
@@ -61,27 +62,22 @@ xcopy /E /I com.opencaptions.hebrewcaptions "%AppData%\Adobe\CEP\extensions\com.
 # 2. Enable debug mode (run as admin)
 com.opencaptions.hebrewcaptions\enable-debug-mode.bat
 
-# 3. Install dependencies
+# 3. Install dependencies (requires Python 3.10+ and FFmpeg on PATH)
 cd com.opencaptions.hebrewcaptions/python
 python install_deps.py
 python download_model.py
 
-# 4. Restart Premiere Pro → Window > Extensions > OpenCaptions
+# 4. Restart Premiere Pro > Window > Extensions > OpenCaptions
 ```
 
 ## Building the installer
 
-Requires [Inno Setup](https://jrsoftware.org/isinfo.php) (free).
+Requires [Inno Setup](https://jrsoftware.org/isinfo.php) (free) and Python 3.10+.
 
 ```bash
-# Open installer/opencaptions-installer.iss in Inno Setup Compiler
-# Click Build > Compile (Ctrl+F9)
+# Downloads bundled Python + FFmpeg, then compiles the installer
+python installer/build_installer.py
 # Output: installer/Output/OpenCaptions-Setup-1.0.0.exe
-```
-
-Or from command line:
-```bash
-"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer/opencaptions-installer.iss
 ```
 
 ## License

@@ -2,11 +2,12 @@
 ;  OpenCaptions — Inno Setup Installer Script
 ;  Builds a proper Windows installer (.exe) for the plugin.
 ;
+;  IMPORTANT: Run build_installer.py FIRST to download the
+;  bundled Python + FFmpeg into com.opencaptions.hebrewcaptions/vendor/
+;
 ;  To compile:
-;    1. Install Inno Setup from https://jrsoftware.org/isinfo.php
-;    2. Open this .iss file in Inno Setup Compiler
-;    3. Click Build > Compile  (or Ctrl+F9)
-;    4. Output: installer/Output/OpenCaptions-Setup.exe
+;    1. python installer/build_installer.py
+;    2. Output: installer/Output/OpenCaptions-Setup-1.0.0.exe
 ; ============================================================
 
 #define MyAppName "OpenCaptions"
@@ -40,10 +41,10 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Messages]
 WelcomeLabel1=Welcome to OpenCaptions
-WelcomeLabel2=This will install OpenCaptions — AI-powered Hebrew captions for Adobe Premiere Pro.%n%nEverything runs 100%% offline on your machine. No data leaves your computer.%n%nRequirements:%n  - Adobe Premiere Pro 2020+%n  - Python 3.10+%n  - FFmpeg on PATH
+WelcomeLabel2=This will install OpenCaptions — AI-powered Hebrew captions for Adobe Premiere Pro.%n%nEverything runs 100%% offline on your machine. No data leaves your computer.%n%nPython and FFmpeg are included — no extra installs needed.%n%nRequirements:%n  - Adobe Premiere Pro 2020+%n  - Internet connection (first install only, for AI packages + model)
 
 [Files]
-; CEP Extension files
+; CEP Extension files (includes vendor/python and vendor/ffmpeg)
 Source: "..\com.opencaptions.hebrewcaptions\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Registry]
@@ -55,12 +56,12 @@ Root: HKCU; Subkey: "SOFTWARE\Adobe\CSXS.12"; ValueName: "PlayerDebugMode"; Valu
 Root: HKCU; Subkey: "SOFTWARE\Adobe\CSXS.13"; ValueName: "PlayerDebugMode"; ValueType: string; ValueData: "1"; Flags: createvalueifdoesntexist
 
 [Run]
-; Post-install: Install Python dependencies (auto-detect GPU)
-Filename: "python"; Parameters: """{app}\python\install_deps.py"""; \
-  StatusMsg: "Installing Python dependencies (auto-detecting GPU)..."; \
-  Flags: runhidden waituntilterminated; Check: PythonExists
-; Post-install: Download AI model
-Filename: "python"; Parameters: """{app}\python\download_model.py"""; \
+; Post-install: Install Python dependencies using BUNDLED Python (auto-detect GPU)
+Filename: "{app}\vendor\python\python.exe"; Parameters: """{app}\python\install_deps.py"""; \
+  StatusMsg: "Installing AI packages — this may take 5-10 minutes..."; \
+  Flags: runhidden waituntilterminated
+; Post-install: Download AI model using BUNDLED Python
+Filename: "{app}\vendor\python\python.exe"; Parameters: """{app}\python\download_model.py"""; \
   StatusMsg: "Downloading AI model (~1-2 GB, one-time)..."; \
   Description: "Download AI model (required, ~1-2 GB)"; \
   Flags: postinstall waituntilterminated
@@ -71,63 +72,32 @@ Type: filesandordirs; Name: "{app}"
 [Code]
 // ── Pascal Script helpers ───────────────────────────────────
 
-function PythonExists(): Boolean;
-var
-  ResultCode: Integer;
-begin
-  Result := Exec('python', '--version', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
-end;
-
-function FFmpegExists(): Boolean;
-var
-  ResultCode: Integer;
-begin
-  Result := Exec('ffmpeg', '-version', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
-end;
-
 procedure InitializeWizard();
 begin
-  // Custom font for the wizard
   WizardForm.WelcomeLabel1.Font.Size := 14;
   WizardForm.WelcomeLabel1.Font.Style := [fsBold];
 end;
 
-function NextButtonClick(CurPageID: Integer): Boolean;
-var
-  Warnings: String;
+function VendorPythonExists(): Boolean;
 begin
-  Result := True;
-
-  // After welcome page, check prerequisites
-  if CurPageID = wpWelcome then
-  begin
-    Warnings := '';
-
-    if not PythonExists() then
-      Warnings := Warnings + '- Python was NOT found on your PATH.' + #13#10 +
-                  '  Install Python 3.10+ from python.org and check "Add to PATH".' + #13#10#13#10;
-
-    if not FFmpegExists() then
-      Warnings := Warnings + '- FFmpeg was NOT found on your PATH.' + #13#10 +
-                  '  Download from ffmpeg.org and add it to your system PATH.' + #13#10#13#10;
-
-    if Warnings <> '' then
-    begin
-      Result := (MsgBox('Some prerequisites are missing:' + #13#10#13#10 +
-                        Warnings +
-                        'The extension will install, but transcription won''t work until these are fixed.' + #13#10#13#10 +
-                        'Continue anyway?',
-                        mbConfirmation, MB_YESNO) = IDYES);
-    end;
-  end;
+  // Verify the bundled Python was included in the package
+  Result := FileExists(ExpandConstant('{app}\vendor\python\python.exe'));
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
   begin
-    // Log success
     Log('OpenCaptions installed to: ' + ExpandConstant('{app}'));
     Log('Registry keys set for CSXS 9-13');
+
+    if not VendorPythonExists() then
+    begin
+      MsgBox('WARNING: Bundled Python was not found.' + #13#10 +
+             'The installer may have been built without running build_installer.py first.' + #13#10#13#10 +
+             'AI transcription will not work until Python is set up manually.' + #13#10 +
+             'See the project README for manual installation steps.',
+             mbError, MB_OK);
+    end;
   end;
 end;

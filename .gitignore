@@ -22,5 +22,9 @@ __pycache__/
 # Pip install artifacts
 =*
 
-# Installer build output
+# Installer build output & cache
 installer/Output/
+installer/_cache/
+
+# Bundled vendor dependencies (downloaded by build_installer.py)
+com.opencaptions.hebrewcaptions/vendor/

@@ -14,13 +14,19 @@ com.opencaptions.hebrewcaptions/
 │   └── CSInterface.js      <- Adobe CSInterface library
 ├── host/
 │   └── host.jsx            <- ExtendScript (Premiere automation)
-└── python/
-    ├── transcriber.py      <- AI transcription engine (multi-GPU)
-    ├── install_deps.py     <- Auto GPU detection & package installer
-    ├── download_model.py   <- Pre-downloads AI models
-    ├── setup_env.py        <- All-in-one venv setup
-    └── requirements.txt
+├── python/
+│   ├── transcriber.py      <- AI transcription engine (multi-GPU)
+│   ├── install_deps.py     <- Auto GPU detection & package installer
+│   ├── download_model.py   <- Pre-downloads AI models
+│   ├── setup_env.py        <- All-in-one venv setup
+│   └── requirements.txt
+└── vendor/                 <- Bundled by installer (not in git)
+    ├── python/             <- Portable Python 3.11 + pip + packages
+    └── ffmpeg/             <- FFmpeg static binaries
 ```
+
+> **Note:** The `vendor/` directory is created by `installer/build_installer.py` and bundled
+> into the installer. End users get it automatically. Developers must run the build script.
 
 ---
 
