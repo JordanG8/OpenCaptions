@@ -1,7 +1,7 @@
 # Free KAPS - AI Hebrew Captions for Premiere Pro
 
 <p align="center">
-  <a href="https://github.com/yosepov/OpenCaps/releases/latest/download/FreeKAPS-Setup-1.0.0.exe">
+  <a href="https://github.com/JordanG8/OpenCaptions/releases/latest/download/FreeKAPS-Setup-1.0.0.exe">
     <img src="https://img.shields.io/badge/Download_for_Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" height="60">
   </a>
 </p>

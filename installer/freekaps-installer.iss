@@ -12,7 +12,7 @@
 #define MyAppName "Free KAPS"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "Jordan Goren"
-#define MyAppURL "https://github.com/yosepov/OpenCaps"
+#define MyAppURL "https://github.com/JordanG8/OpenCaptions"
 
 [Setup]
 AppId={{B7F2A1C3-5E4D-4F8A-9B1C-2D3E4F5A6B7C}
