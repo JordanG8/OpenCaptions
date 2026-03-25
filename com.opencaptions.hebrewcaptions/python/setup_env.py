@@ -1,5 +1,5 @@
 """
-setup_env.py — One-click setup for Free KAPS.
+setup_env.py — One-click setup for OpenCaptions.
 
 Creates a virtual environment, auto-detects your GPU, installs the
 correct packages, and pre-downloads the AI model.
@@ -17,7 +17,7 @@ import platform
 
 
 def log(msg):
-    print(f"--- [FREE KAPS SETUP] {msg}")
+    print(f"--- [OPENCAPTIONS SETUP] {msg}")
 
 
 def main():
@@ -61,7 +61,7 @@ def main():
     else:
         log("Warning: download_model.py not found.")
 
-    log("SUCCESS: Free KAPS environment is ready!")
+    log("SUCCESS: OpenCaptions environment is ready!")
     print(f"\nYour Python path is: {py_exe}\n")
 
 

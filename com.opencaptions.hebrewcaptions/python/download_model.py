@@ -9,7 +9,7 @@ Downloads both:
   - openai-whisper medium model (for DirectML backend, if packages installed)
 """
 
-print("Free KAPS — Model Downloader")
+print("OpenCaptions — Model Downloader")
 print("=" * 50)
 
 # 1. faster-whisper model (always available)
@@ -38,4 +38,4 @@ except Exception as e:
     print(f"openai-whisper model download skipped: {e}")
 
 print("\n" + "=" * 50)
-print("Done! You can now use the Free KAPS plugin in Premiere Pro.")
+print("Done! You can now use the OpenCaptions plugin in Premiere Pro.")

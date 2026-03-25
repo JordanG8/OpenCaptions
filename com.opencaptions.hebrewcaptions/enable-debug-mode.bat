@@ -1,6 +1,6 @@
 @echo off
 echo ============================================
-echo  Free KAPS - Enable Adobe CEP Debug Mode
+echo  OpenCaptions - Enable Adobe CEP Debug Mode
 echo ============================================
 echo.
 echo This enables unsigned extensions in Premiere Pro.

@@ -116,7 +116,7 @@ def install_cpu():
 
 
 def main():
-    print("Free KAPS — GPU Dependency Installer")
+    print("OpenCaptions — GPU Dependency Installer")
     print("="*50)
 
     # Allow manual override via command-line argument
@@ -132,7 +132,7 @@ def main():
     else:
         install_cpu()
 
-    print("\nDone! You can now use the Free KAPS plugin in Premiere Pro.")
+    print("\nDone! You can now use the OpenCaptions plugin in Premiere Pro.")
 
 
 if __name__ == "__main__":

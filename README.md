@@ -1,7 +1,7 @@
-# Free KAPS - AI Hebrew Captions for Premiere Pro
+# OpenCaptions - AI Hebrew Captions for Premiere Pro
 
 <p align="center">
-  <a href="https://github.com/JordanG8/OpenCaptions/releases/latest/download/FreeKAPS-Setup-1.0.0.exe">
+  <a href="https://github.com/JordanG8/OpenCaptions/releases/latest/download/OpenCaptions-Setup-1.0.0.exe">
     <img src="https://img.shields.io/badge/Download_for_Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" height="60">
   </a>
 </p>
@@ -13,7 +13,7 @@
 
 ---
 
-**Free KAPS** generates accurate, time-synced Hebrew subtitles directly on your Premiere Pro timeline using AI. Everything runs **100% offline** — no data leaves your computer.
+**OpenCaptions** generates accurate, time-synced Hebrew subtitles directly on your Premiere Pro timeline using AI. Everything runs **100% offline** — no data leaves your computer.
 
 ## Features
 - **Hebrew AI transcription** with word-level timestamps
@@ -31,7 +31,7 @@ The Windows installer automatically:
 3. Installs the correct Python packages for your GPU
 4. Downloads the AI model (~1-2 GB, one-time)
 
-After install, restart Premiere Pro and go to **Window > Extensions > Free KAPS**.
+After install, restart Premiere Pro and go to **Window > Extensions > OpenCaptions**.
 
 ## GPU Support
 
@@ -56,17 +56,17 @@ If you prefer not to use the installer:
 
 ```bash
 # 1. Copy extension to CEP folder
-xcopy /E /I com.freekaps.hebrewcaptions "%AppData%\Adobe\CEP\extensions\com.freekaps.hebrewcaptions"
+xcopy /E /I com.opencaptions.hebrewcaptions "%AppData%\Adobe\CEP\extensions\com.opencaptions.hebrewcaptions"
 
 # 2. Enable debug mode (run as admin)
-com.freekaps.hebrewcaptions\enable-debug-mode.bat
+com.opencaptions.hebrewcaptions\enable-debug-mode.bat
 
 # 3. Install dependencies
-cd com.freekaps.hebrewcaptions/python
+cd com.opencaptions.hebrewcaptions/python
 python install_deps.py
 python download_model.py
 
-# 4. Restart Premiere Pro → Window > Extensions > Free KAPS
+# 4. Restart Premiere Pro → Window > Extensions > OpenCaptions
 ```
 
 ## Building the installer
@@ -74,14 +74,14 @@ python download_model.py
 Requires [Inno Setup](https://jrsoftware.org/isinfo.php) (free).
 
 ```bash
-# Open installer/freekaps-installer.iss in Inno Setup Compiler
+# Open installer/opencaptions-installer.iss in Inno Setup Compiler
 # Click Build > Compile (Ctrl+F9)
-# Output: installer/Output/FreeKAPS-Setup-1.0.0.exe
+# Output: installer/Output/OpenCaptions-Setup-1.0.0.exe
 ```
 
 Or from command line:
 ```bash
-"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer/freekaps-installer.iss
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer/opencaptions-installer.iss
 ```
 
 ## License

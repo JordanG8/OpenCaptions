@@ -72,8 +72,8 @@ function initPaths() {
     try { extRoot = csInterface.getSystemPath(SystemPath.EXTENSION); } catch (e) { return false; }
     pythonDir = path.join(extRoot, "python");
     tmpDir    = os.tmpdir();
-    wavPath   = path.join(tmpDir, "freekaps_audio.wav");
-    srtPath   = path.join(tmpDir, "freekaps_captions.srt");
+    wavPath   = path.join(tmpDir, "opencaptions_audio.wav");
+    srtPath   = path.join(tmpDir, "opencaptions_captions.srt");
     
     pythonCmd  = os.platform() === "win32" ? "python" : "python3";
     return true;

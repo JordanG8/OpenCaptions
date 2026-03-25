@@ -1,9 +1,9 @@
-# Free KAPS — Installation Guide
+# OpenCaptions — Installation Guide
 
 ## Folder Structure
 
 ```
-com.freekaps.hebrewcaptions/
+com.opencaptions.hebrewcaptions/
 ├── .debug                  <- CEP debug config (port 7737)
 ├── enable-debug-mode.bat   <- Windows helper script
 ├── CSXS/
@@ -50,7 +50,7 @@ defaults write com.adobe.CSXS.12 PlayerDebugMode 1
 
 ## Step 2: Place the Extension Folder
 
-Copy the **entire** `com.freekaps.hebrewcaptions` folder to:
+Copy the **entire** `com.opencaptions.hebrewcaptions` folder to:
 
 ### Windows
 ```
@@ -75,7 +75,7 @@ Make sure `python` is on your PATH.
 ### 3b. Install packages (auto GPU detection)
 
 ```bash
-cd com.freekaps.hebrewcaptions/python
+cd com.opencaptions.hebrewcaptions/python
 python install_deps.py
 ```
 
@@ -113,7 +113,7 @@ Make sure `ffmpeg` is on your system PATH.
 ## Step 4: Download the AI Model (One-Time)
 
 ```bash
-cd com.freekaps.hebrewcaptions/python
+cd com.opencaptions.hebrewcaptions/python
 python download_model.py
 ```
 
@@ -128,7 +128,7 @@ Instead of steps 3b-4, you can run the all-in-one script which creates a
 virtual environment, installs everything, and downloads the model:
 
 ```bash
-cd com.freekaps.hebrewcaptions/python
+cd com.opencaptions.hebrewcaptions/python
 python setup_env.py
 ```
 
@@ -137,7 +137,7 @@ python setup_env.py
 ## Step 5: Launch Premiere Pro
 
 1. Open (or restart) **Adobe Premiere Pro**
-2. Go to **Window > Extensions > Free KAPS**
+2. Go to **Window > Extensions > OpenCaptions**
 3. The panel should appear with a "Generate Captions" button
 4. Open a sequence, select your audio track, click the button
 

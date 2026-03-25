@@ -1,15 +1,15 @@
 ; ============================================================
-;  Free KAPS — Inno Setup Installer Script
+;  OpenCaptions — Inno Setup Installer Script
 ;  Builds a proper Windows installer (.exe) for the plugin.
 ;
 ;  To compile:
 ;    1. Install Inno Setup from https://jrsoftware.org/isinfo.php
 ;    2. Open this .iss file in Inno Setup Compiler
 ;    3. Click Build > Compile  (or Ctrl+F9)
-;    4. Output: installer/Output/FreeKAPS-Setup.exe
+;    4. Output: installer/Output/OpenCaptions-Setup.exe
 ; ============================================================
 
-#define MyAppName "Free KAPS"
+#define MyAppName "OpenCaptions"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "Jordan Goren"
 #define MyAppURL "https://github.com/JordanG8/OpenCaptions"
@@ -21,12 +21,12 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}/issues
-DefaultDirName={userappdata}\Adobe\CEP\extensions\com.freekaps.hebrewcaptions
+DefaultDirName={userappdata}\Adobe\CEP\extensions\com.opencaptions.hebrewcaptions
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=..\LICENSE
 OutputDir=Output
-OutputBaseFilename=FreeKAPS-Setup-{#MyAppVersion}
+OutputBaseFilename=OpenCaptions-Setup-{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -39,12 +39,12 @@ ArchitecturesInstallIn64BitMode=x64compatible
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Messages]
-WelcomeLabel1=Welcome to Free KAPS
-WelcomeLabel2=This will install Free KAPS — AI-powered Hebrew captions for Adobe Premiere Pro.%n%nEverything runs 100%% offline on your machine. No data leaves your computer.%n%nRequirements:%n  - Adobe Premiere Pro 2020+%n  - Python 3.10+%n  - FFmpeg on PATH
+WelcomeLabel1=Welcome to OpenCaptions
+WelcomeLabel2=This will install OpenCaptions — AI-powered Hebrew captions for Adobe Premiere Pro.%n%nEverything runs 100%% offline on your machine. No data leaves your computer.%n%nRequirements:%n  - Adobe Premiere Pro 2020+%n  - Python 3.10+%n  - FFmpeg on PATH
 
 [Files]
 ; CEP Extension files
-Source: "..\com.freekaps.hebrewcaptions\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\com.opencaptions.hebrewcaptions\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Registry]
 ; Enable unsigned CEP extensions (PlayerDebugMode) for all known CSXS versions
@@ -127,7 +127,7 @@ begin
   if CurStep = ssPostInstall then
   begin
     // Log success
-    Log('Free KAPS installed to: ' + ExpandConstant('{app}'));
+    Log('OpenCaptions installed to: ' + ExpandConstant('{app}'));
     Log('Registry keys set for CSXS 9-13');
   end;
 end;

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="6.0" ExtensionBundleId="com.freekaps.hebrewcaptions"
+<ExtensionManifest Version="6.0" ExtensionBundleId="com.opencaptions.hebrewcaptions"
     ExtensionBundleVersion="1.0.0"
-    ExtensionBundleName="Free KAPS Hebrew Captions"
+    ExtensionBundleName="OpenCaptions Hebrew Captions"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
     <ExtensionList>
-        <Extension Id="com.freekaps.hebrewcaptions.panel" Version="1.0.0" />
+        <Extension Id="com.opencaptions.hebrewcaptions.panel" Version="1.0.0" />
     </ExtensionList>
 
     <ExecutionEnvironment>
@@ -22,7 +22,7 @@
     </ExecutionEnvironment>
 
     <DispatchInfoList>
-        <Extension Id="com.freekaps.hebrewcaptions.panel">
+        <Extension Id="com.opencaptions.hebrewcaptions.panel">
             <DispatchInfo>
                 <Resources>
                     <MainPath>./client/index.html</MainPath>
@@ -38,7 +38,7 @@
                 </Lifecycle>
                 <UI>
                     <Type>Panel</Type>
-                    <Menu>Free KAPS</Menu>
+                    <Menu>OpenCaptions</Menu>
                     <Geometry>
                         <Size>
                             <Height>320</Height>
