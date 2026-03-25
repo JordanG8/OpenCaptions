@@ -1,54 +1,37 @@
-# Free KAPS - כתוביות חכמות בעברית
+# Free KAPS - AI Hebrew Captions for Premiere Pro
 
-**Free KAPS** is an AI-powered Hebrew captioning extension for Adobe Premiere Pro. It generates accurate, time-synced Hebrew subtitles directly on your timeline.
+<p align="center">
+  <a href="https://github.com/yosepov/OpenCaps/releases/latest/download/FreeKAPS-Setup-1.0.0.exe">
+    <img src="https://img.shields.io/badge/Download_for_Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" height="60">
+  </a>
+</p>
 
-Everything runs **100% offline** on your local machine. No data leaves your computer.
+<p align="center">
+  <em>One-click installer. No terminal needed.</em><br>
+  <sub>Requires Python 3.10+ and FFmpeg on PATH</sub>
+</p>
 
-## Key Features
+---
+
+**Free KAPS** generates accurate, time-synced Hebrew subtitles directly on your Premiere Pro timeline using AI. Everything runs **100% offline** — no data leaves your computer.
+
+## Features
 - **Hebrew AI transcription** with word-level timestamps
 - **RTL punctuation fix** — corrects `?!.` jumping to the wrong side
 - **One-click timeline placement** — imports and places SRT automatically
 - **GPU accelerated** — NVIDIA (CUDA), AMD (DirectML), and Intel GPUs supported
+- **Track selection** — choose which audio track to transcribe
 - **100% local & private** — no cloud APIs, no subscriptions
 
----
+## What the installer does
 
-## Quick Start
+The Windows installer automatically:
+1. Copies the extension to your Adobe CEP extensions folder
+2. Sets the required registry keys (PlayerDebugMode)
+3. Installs the correct Python packages for your GPU
+4. Downloads the AI model (~1-2 GB, one-time)
 
-### 1. Enable debug mode (one-time)
-**Windows:** Right-click `enable-debug-mode.bat` → Run as Administrator
-
-**Mac:**
-```bash
-defaults write com.adobe.CSXS.11 PlayerDebugMode 1
-defaults write com.adobe.CSXS.12 PlayerDebugMode 1
-```
-
-### 2. Copy to extensions folder
-Place the `com.freekaps.hebrewcaptions` folder into:
-- **Windows:** `%AppData%\Adobe\CEP\extensions\`
-- **Mac:** `~/Library/Application Support/Adobe/CEP/extensions/`
-
-### 3. Install dependencies
-Requires **Python 3.10+** and **FFmpeg** on your PATH.
-
-```bash
-cd com.freekaps.hebrewcaptions/python
-python install_deps.py   # auto-detects GPU, installs correct packages
-python download_model.py  # downloads AI model (~1-2 GB, one-time)
-```
-
-Or use the all-in-one setup (creates a virtual environment):
-```bash
-python setup_env.py
-```
-
-### 4. Use it
-1. Restart Premiere Pro
-2. **Window > Extensions > Free KAPS**
-3. Select audio track, click **"צור כתוביות (AI)"**
-
----
+After install, restart Premiere Pro and go to **Window > Extensions > Free KAPS**.
 
 ## GPU Support
 
@@ -61,14 +44,50 @@ python setup_env.py
 
 The extension auto-detects your GPU and uses the best available backend.
 
----
+## Prerequisites
 
-## Requirements
-- Adobe Premiere Pro 2020 or newer
-- Python 3.10+
-- FFmpeg (on system PATH)
+- **Adobe Premiere Pro 2020+**
+- **Python 3.10+** — [Download](https://www.python.org/downloads/) (check "Add to PATH" during install)
+- **FFmpeg** — [Download](https://ffmpeg.org/download.html) (add to system PATH)
 
----
+## Manual Install (advanced)
+
+If you prefer not to use the installer:
+
+```bash
+# 1. Copy extension to CEP folder
+xcopy /E /I com.freekaps.hebrewcaptions "%AppData%\Adobe\CEP\extensions\com.freekaps.hebrewcaptions"
+
+# 2. Enable debug mode (run as admin)
+com.freekaps.hebrewcaptions\enable-debug-mode.bat
+
+# 3. Install dependencies
+cd com.freekaps.hebrewcaptions/python
+python install_deps.py
+python download_model.py
+
+# 4. Restart Premiere Pro → Window > Extensions > Free KAPS
+```
+
+## Building the installer
+
+Requires [Inno Setup](https://jrsoftware.org/isinfo.php) (free).
+
+```bash
+# Open installer/freekaps-installer.iss in Inno Setup Compiler
+# Click Build > Compile (Ctrl+F9)
+# Output: installer/Output/FreeKAPS-Setup-1.0.0.exe
+```
+
+Or from command line:
+```bash
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer/freekaps-installer.iss
+```
 
 ## License
-MIT License - see [LICENSE](LICENSE)
+
+MIT License — see [LICENSE](LICENSE)
+
+---
+
+<p align="center"><sub>Made by Jordan Goren & Claude</sub></p>

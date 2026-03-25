@@ -21,3 +21,6 @@ __pycache__/
 
 # Pip install artifacts
 =*
+
+# Installer build output
+installer/Output/
