@@ -38,6 +38,8 @@ print("    OpenCaptions — Model Downloader")
 print("  " + "="*56)
 print(f"  Disk: {disk_stats()}")
 
+success = False
+
 # 1. faster-whisper model (always available)
 try:
     from faster_whisper import WhisperModel
@@ -48,8 +50,9 @@ try:
     del model
     elapsed = time.time() - start
     print(f"\n  faster-whisper model cached in {elapsed:.0f}s — Disk: {disk_stats()}")
+    success = True
 except Exception as e:
-    print(f"  faster-whisper model download skipped: {e}")
+    print(f"  faster-whisper model download failed: {e}")
 
 # 2. openai-whisper model (only if installed — for DirectML backend)
 try:
@@ -61,13 +64,18 @@ try:
     del model
     elapsed = time.time() - start
     print(f"\n  openai-whisper model cached in {elapsed:.0f}s — Disk: {disk_stats()}")
+    success = True
 except ImportError:
     print("\n  openai-whisper not installed — skipping DirectML model download.")
 except Exception as e:
-    print(f"  openai-whisper model download skipped: {e}")
+    print(f"  openai-whisper model download failed: {e}")
 
 print()
 print("  " + "="*56)
+if not success:
+    print("  ERROR: No AI models were downloaded!")
+    sys.exit(1)
+
 print(f"  Done! Disk: {disk_stats()}")
 print("  You can now use the OpenCaptions plugin in Premiere Pro.")
 print("  " + "="*56)

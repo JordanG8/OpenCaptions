@@ -116,16 +116,19 @@ def install_nvidia():
     print("\n  Detected: NVIDIA GPU")
     print("  Installing faster-whisper with CUDA support...\n")
 
-    pip_install(["faster-whisper>=1.0.0"], "faster-whisper", 1, 2)
-    pip_install([
+    s1 = pip_install(["faster-whisper>=1.0.0"], "faster-whisper", 1, 2)
+    s2 = pip_install([
         "nvidia-cublas-cu12",
         "nvidia-cudnn-cu12",
         "nvidia-cuda-runtime-cu12",
     ], "NVIDIA CUDA libraries", 2, 2)
 
-    print("\n" + "="*60)
-    print("  NVIDIA setup complete!")
-    print("="*60)
+    if s1 and s2:
+        print("\n" + "="*60)
+        print("  NVIDIA setup complete!")
+        print("="*60)
+        return True
+    return False
 
 
 def install_directml():
@@ -133,24 +136,30 @@ def install_directml():
     print("\n  Detected: AMD / Intel GPU")
     print("  Installing openai-whisper with DirectML GPU support...\n")
 
-    pip_install(["torch>=2.1.0", "torchaudio>=2.1.0"], "PyTorch", 1, 4)
-    pip_install(["torch-directml>=0.2.5"], "DirectML backend", 2, 4)
-    pip_install(["openai-whisper>=20231117"], "OpenAI Whisper", 3, 4)
-    pip_install(["faster-whisper>=1.0.0"], "faster-whisper (CPU fallback)", 4, 4)
+    s1 = pip_install(["torch>=2.1.0", "torchaudio>=2.1.0"], "PyTorch", 1, 4)
+    s2 = pip_install(["torch-directml>=0.2.5"], "DirectML backend", 2, 4)
+    s3 = pip_install(["openai-whisper>=20231117"], "OpenAI Whisper", 3, 4)
+    s4 = pip_install(["faster-whisper>=1.0.0"], "faster-whisper (CPU fallback)", 4, 4)
 
-    print("\n" + "="*60)
-    print("  DirectML setup complete!")
-    print("="*60)
+    if s1 and s2 and s3 and s4:
+        print("\n" + "="*60)
+        print("  DirectML setup complete!")
+        print("="*60)
+        return True
+    return False
 
 
 def install_cpu():
     """Install CPU-only packages (minimal)."""
     print("\n  Installing CPU-only packages...")
-    pip_install(["faster-whisper>=1.0.0"], "faster-whisper (CPU)", 1, 1)
+    s1 = pip_install(["faster-whisper>=1.0.0"], "faster-whisper (CPU)", 1, 1)
 
-    print("\n" + "="*60)
-    print("  CPU-only setup complete.")
-    print("="*60)
+    if s1:
+        print("\n" + "="*60)
+        print("  CPU-only setup complete.")
+        print("="*60)
+        return True
+    return False
 
 
 def main():
@@ -168,14 +177,19 @@ def main():
     else:
         vendor = detect_gpu()
 
+    success = True
     if vendor == "nvidia":
-        install_nvidia()
+        success = install_nvidia()
     elif vendor in ("amd", "intel"):
-        install_directml()
+        success = install_directml()
     else:
-        install_cpu()
+        success = install_cpu()
 
     print(f"\n  Final disk: {disk_stats()}")
+    if success is False:
+        print("\n  ERROR: Dependency installation failed!")
+        sys.exit(1)
+    
     print("  Done! You can now use the OpenCaptions plugin in Premiere Pro.")
     print()
 

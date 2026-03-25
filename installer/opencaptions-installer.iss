@@ -54,6 +54,8 @@ Root: HKCU; Subkey: "SOFTWARE\Adobe\CSXS.10"; ValueName: "PlayerDebugMode"; Valu
 Root: HKCU; Subkey: "SOFTWARE\Adobe\CSXS.11"; ValueName: "PlayerDebugMode"; ValueType: string; ValueData: "1"; Flags: createvalueifdoesntexist
 Root: HKCU; Subkey: "SOFTWARE\Adobe\CSXS.12"; ValueName: "PlayerDebugMode"; ValueType: string; ValueData: "1"; Flags: createvalueifdoesntexist
 Root: HKCU; Subkey: "SOFTWARE\Adobe\CSXS.13"; ValueName: "PlayerDebugMode"; ValueType: string; ValueData: "1"; Flags: createvalueifdoesntexist
+Root: HKCU; Subkey: "SOFTWARE\Adobe\CSXS.14"; ValueName: "PlayerDebugMode"; ValueType: string; ValueData: "1"; Flags: createvalueifdoesntexist
+Root: HKCU; Subkey: "SOFTWARE\Adobe\CSXS.15"; ValueName: "PlayerDebugMode"; ValueType: string; ValueData: "1"; Flags: createvalueifdoesntexist
 
 [Run]
 ; Post-install: Install Python dependencies using BUNDLED Python (auto-detect GPU)
