@@ -16,6 +16,7 @@
             --success: #28a745;
             --error: #dc3545;
             --working: #ffc107;
+            --surface: #1a1a1a;
         }
 
         body {
@@ -38,20 +39,11 @@
             justify-content: space-between;
         }
 
-        .logo-area h1 {
-            font-size: 14px;
-            font-weight: bold;
-            margin: 0;
-            color: #fff;
-        }
+        .logo-area h1 { font-size: 14px; font-weight: bold; margin: 0; color: #fff; }
 
-        .container {
-            padding: 16px;
-        }
+        .container { padding: 16px; }
 
-        .section {
-            margin-bottom: 20px;
-        }
+        .section { margin-bottom: 20px; }
 
         label {
             display: block;
@@ -60,37 +52,22 @@
             color: #bbb;
         }
 
-        .tooltip-container {
-            display: inline-flex;
-            align-items: center;
-            position: relative;
-        }
+        .tooltip-container { display: inline-flex; align-items: center; position: relative; }
 
         .info-icon {
             display: inline-block;
-            width: 14px;
-            height: 14px;
-            background: #444;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 14px;
-            font-size: 10px;
-            margin-right: 6px;
-            cursor: help;
+            width: 14px; height: 14px;
+            background: #444; border-radius: 50%;
+            text-align: center; line-height: 14px;
+            font-size: 10px; margin-right: 6px; cursor: help;
         }
 
         .info-icon:hover::after {
             content: attr(data-tooltip);
-            position: absolute;
-            bottom: 20px;
-            right: 0;
-            background: #444;
-            color: #fff;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 11px;
-            white-space: nowrap;
-            z-index: 100;
+            position: absolute; bottom: 20px; right: 0;
+            background: #444; color: #fff;
+            padding: 6px 10px; border-radius: 4px;
+            font-size: 11px; white-space: nowrap; z-index: 100;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
 
@@ -98,113 +75,271 @@
             width: 100%;
             background: var(--input-bg);
             border: 1px solid var(--border-color);
-            color: #fff;
-            padding: 6px;
-            border-radius: 4px;
-            outline: none;
+            color: #fff; padding: 6px; border-radius: 4px; outline: none;
         }
 
-        .slider-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
+        .slider-box { display: flex; align-items: center; gap: 10px; }
         .slider-box span { font-size: 12px; font-weight: bold; width: 24px; }
 
         .checkbox-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-            cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 10px; cursor: pointer;
         }
-
-        .checkbox-row input {
-            cursor: pointer;
-        }
-
-        /* Steps */
-        .steps-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            position: relative;
-        }
-        .steps-line {
-            position: absolute;
-            top: 10px; left: 0; right: 0;
-            height: 2px; background: #3e3e3e;
-            z-index: 1;
-        }
-        .step-pip {
-            width: 22px; height: 22px;
-            background: var(--bg-color);
-            border: 2px solid #3e3e3e;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px; font-weight: bold;
-            z-index: 2; color: #666; transition: all 0.3s;
-        }
-        .step-pip.active { border-color: var(--accent-color); color: var(--accent-color); box-shadow: 0 0 8px var(--accent-color); }
-        .step-pip.done { background: var(--accent-color); border-color: var(--accent-color); color: #fff; }
-
-        /* Buttons */
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        .checkbox-row input { cursor: pointer; }
 
         button {
-            padding: 10px;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
+            padding: 10px; border: none; border-radius: 4px;
+            font-weight: bold; cursor: pointer; transition: background 0.2s;
         }
 
-        #btn-generate { background-color: var(--accent-color); color: #fff; font-size: 13px; }
+        #btn-generate { background-color: var(--accent-color); color: #fff; font-size: 13px; width: 100%; }
         #btn-generate:hover { background-color: var(--accent-hover); }
         #btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        #btn-cancel { background-color: transparent; border: 1px solid #555; color: #ccc; display: none; }
-        #btn-cancel:hover { background-color: #333; color: #fff; }
-
         #btn-refresh-tracks { background: none; border: 1px solid #444; font-size: 10px; padding: 4px 8px; margin-top: 4px; color: #999; }
 
-        /* Log area */
-        #log {
-            margin-top: 16px;
-            height: 120px;
-            background: #1a1a1a;
+        /* ── Screen transitions ─────────────────────────── */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ── Progress screen ────────────────────────────── */
+
+        /* Step bar (top of progress screen) */
+        .step-bar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            position: relative;
+            padding: 0 8px;
+            margin-bottom: 24px;
+        }
+        .step-bar-line {
+            position: absolute;
+            top: 14px; left: 22px; right: 22px;
+            height: 2px; background: var(--border-color);
+            z-index: 1;
+        }
+        .step-bar-fill {
+            position: absolute;
+            top: 14px; left: 22px;
+            height: 2px; background: var(--accent-color);
+            z-index: 2; width: 0; transition: width 0.4s ease;
+        }
+        .step-item {
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 3; min-width: 50px;
+        }
+        .step-pip {
+            width: 28px; height: 28px;
+            background: var(--bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: bold;
+            color: #666; transition: all 0.3s;
+        }
+        .step-pip.active {
+            border-color: var(--accent-color); color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(0,120,212,0.5);
+        }
+        .step-pip.done {
+            background: var(--accent-color); border-color: var(--accent-color); color: #fff;
+        }
+        .step-label {
+            font-size: 9px; color: #666; margin-top: 6px;
+            text-align: center; transition: color 0.3s;
+        }
+        .step-item.active .step-label,
+        .step-item.done .step-label { color: #ccc; }
+
+        /* Step content panels */
+        .step-content { min-height: 160px; }
+        .step-panel { display: none; }
+        .step-panel.active { display: block; }
+
+        .step-panel-inner {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        .step-title {
+            font-size: 13px; font-weight: bold; color: #fff;
+            margin: 0 0 12px 0;
+        }
+
+        .step-subtitle {
+            font-size: 11px; color: #999; margin: 0 0 12px 0;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 18px; height: 18px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Progress bar */
+        .progress-track {
+            width: 100%; height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-color);
+            border-radius: 3px;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+        .progress-fill.indeterminate {
+            width: 30%;
+            animation: indeterminate 1.5s ease-in-out infinite;
+        }
+        @keyframes indeterminate {
+            0%   { margin-right: 100%; margin-left: 0; }
+            50%  { margin-right: 0;    margin-left: 0; }
+            100% { margin-right: 0;    margin-left: 100%; }
+        }
+        .progress-text {
+            font-size: 10px; color: #888;
+            display: flex; justify-content: space-between;
+        }
+
+        /* Live transcription preview */
+        .live-preview {
+            background: #111;
             border: 1px solid #333;
             border-radius: 4px;
-            padding: 8px;
+            padding: 10px;
+            margin-top: 12px;
+            min-height: 36px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 13px;
+            color: #fff;
+            line-height: 1.5;
+            direction: rtl;
+            text-align: right;
+        }
+        .live-preview-label {
+            font-size: 9px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .live-preview .cursor {
+            display: inline-block;
+            width: 2px; height: 14px;
+            background: var(--accent-color);
+            vertical-align: text-bottom;
+            animation: blink 1s step-end infinite;
+            margin-right: 2px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Backend badge */
+        .backend-badge {
+            display: inline-block;
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: #333;
+            color: #aaa;
+            border: 1px solid #444;
+        }
+        .backend-badge.cuda { background: rgba(118,185,0,0.15); color: #76b900; border-color: #76b900; }
+        .backend-badge.directml { background: rgba(0,120,212,0.15); color: #4db8ff; border-color: #0078d4; }
+        .backend-badge.cpu { background: rgba(255,193,7,0.15); color: var(--working); border-color: var(--working); }
+
+        .stats-row {
+            display: flex; gap: 16px; align-items: center;
+            margin-top: 10px; flex-wrap: wrap;
+        }
+        .stat {
+            font-size: 10px; color: #888;
+        }
+        .stat-value { color: #ccc; font-weight: bold; }
+
+        /* Cancel button */
+        #btn-cancel {
+            background: transparent; border: 1px solid #555;
+            color: #ccc; width: 100%; margin-top: 16px;
+            font-size: 12px;
+        }
+        #btn-cancel:hover { background: #333; color: #fff; }
+
+        /* Done screen */
+        .done-panel {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .done-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .done-message {
+            font-size: 14px; font-weight: bold; color: #fff;
+            margin-bottom: 4px;
+        }
+        .done-sub { font-size: 11px; color: #888; }
+
+        #btn-back {
+            background-color: var(--accent-color); color: #fff;
+            font-size: 12px; width: 100%; margin-top: 16px;
+        }
+        #btn-back:hover { background-color: var(--accent-hover); }
+
+        /* Error panel */
+        .error-panel { text-align: center; padding: 20px 0; }
+        .error-message { font-size: 12px; color: var(--error); margin-bottom: 8px; }
+        #btn-retry {
+            background-color: var(--accent-color); color: #fff;
+            font-size: 12px; width: 100%; margin-top: 8px;
+        }
+        #btn-retry:hover { background-color: var(--accent-hover); }
+
+        /* Log area (collapsible) */
+        .log-section { margin-top: 16px; }
+        .log-toggle {
+            background: none; border: none; color: #666;
+            font-size: 10px; cursor: pointer; padding: 4px 0;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .log-toggle:hover { color: #999; }
+        .log-toggle .arrow { transition: transform 0.2s; display: inline-block; }
+        .log-toggle .arrow.open { transform: rotate(90deg); }
+        #log {
+            height: 0; overflow: hidden;
+            background: var(--surface);
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 0 8px;
             font-family: 'Consolas', monospace;
             font-size: 10px;
-            overflow-y: auto;
             white-space: pre-wrap;
             color: #aaa;
+            transition: height 0.2s, padding 0.2s;
+        }
+        #log.open {
+            height: 90px; padding: 8px;
+            overflow-y: auto;
         }
         .log-warn { color: #f1c40f; }
         .log-err { color: #e74c3c; font-weight: bold; }
         .log-ok { color: #2ecc71; }
         .log-py { color: #3498db; }
 
-        .status-area {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-            font-size: 11px;
-        }
-        .status-badge {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: #555;
-        }
+        /* Status area */
+        .status-area { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 11px; }
+        .status-badge { width: 8px; height: 8px; border-radius: 50%; background: #555; }
         .status-badge.ready { background: var(--success); }
         .status-badge.working { background: var(--working); box-shadow: 0 0 5px var(--working); }
         .status-badge.error { background: var(--error); }
@@ -212,11 +347,8 @@
 
         #btn-copy-log {
             float: left;
-            background: none;
-            border: 1px solid #333;
-            color: #666;
-            font-size: 9px;
-            margin-top: 4px;
+            background: none; border: 1px solid #333;
+            color: #666; font-size: 9px; margin-top: 4px;
         }
 
     </style>
@@ -233,66 +365,191 @@
         </div>
     </header>
 
-    <div class="container">
-        
-        <!-- Track Selection -->
-        <div class="section">
-            <label>
-                בחר ערוץ סאונד לתמלול
-                <span class="info-icon" data-tooltip="בחר את הערוץ שבו נמצא הקריינות שלך">i</span>
-            </label>
-            <select id="track-select">
-                <option value="-1">כל הערוצים (Mix)</option>
-            </select>
-            <button id="btn-refresh-tracks">רענן ערוצים</button>
-        </div>
+    <!-- ═══════ SETUP SCREEN ═══════ -->
+    <div id="screen-setup" class="screen active">
+        <div class="container">
 
-        <!-- Density Slider -->
-        <div class="section">
-            <label>
-                צפיפות מילים במקטע
-                <span class="info-icon" data-tooltip="מספר המילים המקסימלי שיופיעו על המסך בבת אחת">i</span>
-            </label>
-            <div class="slider-box">
-                <input type="range" id="words-slider" min="3" max="15" value="7">
-                <span id="words-value">7</span>
+            <!-- Track Selection -->
+            <div class="section">
+                <label>
+                    בחר ערוץ סאונד לתמלול
+                    <span class="info-icon" data-tooltip="בחר את הערוץ שבו נמצא הקריינות שלך">i</span>
+                </label>
+                <select id="track-select">
+                    <option value="-1">כל הערוצים (Mix)</option>
+                </select>
+                <button id="btn-refresh-tracks">רענן ערוצים</button>
             </div>
-        </div>
 
-        <!-- Options -->
-        <div class="section">
-            <label class="checkbox-row">
-                <input type="checkbox" id="check-autoplace" checked>
-                מקם אוטומטית על הטיימליין
-                <span class="info-icon" data-tooltip="ייבוא הכתוביות ישירות לציר הזמן של הפרמייר">i</span>
-            </label>
-            
-            <label class="checkbox-row">
-                <input type="checkbox" id="check-rtl-fix" checked>
-                תיקון פיסוק עברית (RTL Fix)
-                <span class="info-icon" data-tooltip="מתקן סימני פיסוק (?!.) שקופצים לצד הלא נכון בעברית">i</span>
-            </label>
-        </div>
+            <!-- Density Slider -->
+            <div class="section">
+                <label>
+                    צפיפות מילים במקטע
+                    <span class="info-icon" data-tooltip="מספר המילים המקסימלי שיופיעו על המסך בבת אחת">i</span>
+                </label>
+                <div class="slider-box">
+                    <input type="range" id="words-slider" min="3" max="15" value="7">
+                    <span id="words-value">7</span>
+                </div>
+            </div>
 
-        <!-- Progress Steps -->
-        <div class="steps-container">
-            <div class="steps-line"></div>
-            <div class="step-pip" data-step="1">1</div>
-            <div class="step-pip" data-step="2">2</div>
-            <div class="step-pip" data-step="3">3</div>
-            <div class="step-pip" data-step="4">4</div>
-        </div>
+            <!-- Options -->
+            <div class="section">
+                <label class="checkbox-row">
+                    <input type="checkbox" id="check-autoplace" checked>
+                    מקם אוטומטית על הטיימליין
+                    <span class="info-icon" data-tooltip="ייבוא הכתוביות ישירות לציר הזמן של הפרמייר">i</span>
+                </label>
 
-        <!-- Action Buttons -->
-        <div class="btn-group">
+                <label class="checkbox-row">
+                    <input type="checkbox" id="check-rtl-fix" checked>
+                    תיקון פיסוק עברית (RTL Fix)
+                    <span class="info-icon" data-tooltip="מתקן סימני פיסוק (?!.) שקופצים לצד הלא נכון בעברית">i</span>
+                </label>
+            </div>
+
+            <!-- Action Button -->
             <button id="btn-generate">צור כתוביות (AI)</button>
-            <button id="btn-cancel">עצור</button>
+
         </div>
+    </div>
 
-        <!-- Console Log -->
-        <div id="log">מוכן לעבודה.</div>
-        <button id="btn-copy-log">העתק לוג</button>
+    <!-- ═══════ PROGRESS SCREEN ═══════ -->
+    <div id="screen-progress" class="screen">
+        <div class="container">
 
+            <!-- Step bar at top -->
+            <div class="step-bar">
+                <div class="step-bar-line"></div>
+                <div class="step-bar-fill" id="step-bar-fill"></div>
+                <div class="step-item" data-step="1">
+                    <div class="step-pip" data-step="1">1</div>
+                    <div class="step-label">ייצוא שמע</div>
+                </div>
+                <div class="step-item" data-step="2">
+                    <div class="step-pip" data-step="2">2</div>
+                    <div class="step-label">תמלול AI</div>
+                </div>
+                <div class="step-item" data-step="3">
+                    <div class="step-pip" data-step="3">3</div>
+                    <div class="step-label">ייבוא כתוביות</div>
+                </div>
+                <div class="step-item" data-step="4">
+                    <div class="step-pip" data-step="4">4</div>
+                    <div class="step-label">מיקום</div>
+                </div>
+            </div>
+
+            <!-- Step content area -->
+            <div class="step-content">
+
+                <!-- Step 1: Export -->
+                <div class="step-panel" data-panel="1" id="panel-1">
+                    <div class="step-panel-inner">
+                        <div class="step-title">מייצא שמע מהסיקוונס <span class="spinner"></span></div>
+                        <div class="step-subtitle">ממיר את ערוץ השמע לקובץ WAV לעיבוד...</div>
+                        <div class="progress-track">
+                            <div class="progress-fill indeterminate"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Transcription -->
+                <div class="step-panel" data-panel="2" id="panel-2">
+                    <div class="step-panel-inner">
+                        <div class="step-title">
+                            <span id="step2-title-text">טוען מודל AI</span>
+                            <span class="spinner" id="step2-spinner"></span>
+                        </div>
+                        <div class="step-subtitle" id="step2-subtitle">מאתחל את מנוע התמלול...</div>
+
+                        <!-- Progress bar (hidden until duration known) -->
+                        <div id="transcription-progress" style="display:none;">
+                            <div class="progress-track">
+                                <div class="progress-fill" id="transcription-fill"></div>
+                            </div>
+                            <div class="progress-text">
+                                <span id="transcription-pct">0%</span>
+                                <span id="transcription-time"></span>
+                            </div>
+                        </div>
+
+                        <!-- Indeterminate bar (while model loads) -->
+                        <div id="transcription-indeterminate">
+                            <div class="progress-track">
+                                <div class="progress-fill indeterminate"></div>
+                            </div>
+                        </div>
+
+                        <!-- Live preview -->
+                        <div class="live-preview" id="live-preview"><span class="cursor"></span></div>
+                        <div class="live-preview-label">תצוגה מקדימה — מילים בזמן אמת</div>
+
+                        <!-- Stats -->
+                        <div class="stats-row">
+                            <span class="backend-badge" id="backend-badge" style="display:none;"></span>
+                            <span class="stat">משך: <span class="stat-value" id="stat-duration">—</span></span>
+                            <span class="stat">זמן: <span class="stat-value" id="stat-elapsed">0:00</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Import -->
+                <div class="step-panel" data-panel="3" id="panel-3">
+                    <div class="step-panel-inner">
+                        <div class="step-title">מייבא כתוביות לפרויקט <span class="spinner"></span></div>
+                        <div class="step-subtitle">מעביר את קובץ ה-SRT לתוך הפרויקט...</div>
+                        <div class="progress-track">
+                            <div class="progress-fill indeterminate"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Place -->
+                <div class="step-panel" data-panel="4" id="panel-4">
+                    <div class="step-panel-inner">
+                        <div class="step-title">ממקם על הטיימליין <span class="spinner"></span></div>
+                        <div class="step-subtitle">מוסיף כתוביות לציר הזמן...</div>
+                        <div class="progress-track">
+                            <div class="progress-fill indeterminate"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Done -->
+                <div class="step-panel" data-panel="done" id="panel-done">
+                    <div class="done-panel">
+                        <div class="done-icon">&#10003;</div>
+                        <div class="done-message" id="done-message">הכתוביות נוצרו בהצלחה!</div>
+                        <div class="done-sub" id="done-sub"></div>
+                    </div>
+                    <button id="btn-back">חזרה להגדרות</button>
+                </div>
+
+                <!-- Error -->
+                <div class="step-panel" data-panel="error" id="panel-error">
+                    <div class="error-panel">
+                        <div class="done-icon">&#10007;</div>
+                        <div class="error-message" id="error-message"></div>
+                    </div>
+                    <button id="btn-retry">חזרה</button>
+                </div>
+
+            </div>
+
+            <!-- Cancel -->
+            <button id="btn-cancel" style="display:none;">עצור</button>
+
+            <!-- Collapsible log -->
+            <div class="log-section">
+                <button class="log-toggle" id="log-toggle">
+                    <span class="arrow" id="log-arrow">&#9654;</span> לוג מפורט
+                </button>
+                <div id="log"></div>
+                <button id="btn-copy-log" style="display:none;">העתק לוג</button>
+            </div>
+
+        </div>
     </div>
 
     <!-- Adobe Scripts -->

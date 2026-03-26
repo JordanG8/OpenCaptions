@@ -7,6 +7,15 @@ Backends (tried in priority order):
   3. CPU          — faster-whisper int8 (last resort)
 
 Usage:  python transcriber.py <input.wav> <output.srt> [max_words] [do_rtl_fix]
+
+Progress protocol (parsed by main.js):
+  @@DURATION:<seconds>      — total audio length
+  @@BACKEND:<name>          — which backend is active
+  @@MODEL_LOADING           — model is loading into memory
+  @@MODEL_READY             — model loaded, transcription starting
+  @@SEG:<end_sec>|<text>    — a segment was transcribed (for live preview + progress)
+  @@WRITING_SRT             — writing SRT file
+  @@DONE                    — all finished
 """
 
 import sys
@@ -138,17 +147,22 @@ def transcribe_cuda(input_file, language, beam_size):
     setup_cuda_paths()
     from faster_whisper import WhisperModel
 
-    print("Backend: faster-whisper (NVIDIA CUDA)")
+    print("@@BACKEND:faster-whisper CUDA", flush=True)
+    print("@@MODEL_LOADING", flush=True)
     model = WhisperModel("medium", device="cuda", compute_type="float16")
+    print("@@MODEL_READY", flush=True)
 
     segments, info = model.transcribe(
         input_file, language=language, beam_size=beam_size, word_timestamps=True
     )
-    print(f"משך הסרטון: {info.duration:.2f} שניות")
+    duration = info.duration
+    print(f"@@DURATION:{duration:.2f}", flush=True)
 
     words = []
     for segment in segments:
         words.extend(segment.words)
+        text = " ".join(w.word.strip() for w in segment.words)
+        print(f"@@SEG:{segment.end:.2f}|{text}", flush=True)
     return words
 
 
@@ -160,19 +174,20 @@ def transcribe_directml(input_file, language, beam_size):
     import torch_directml
     import whisper
 
-    print("Backend: openai-whisper + DirectML (GPU)")
+    print("@@BACKEND:openai-whisper DirectML", flush=True)
+    print("@@MODEL_LOADING", flush=True)
     dml_device = torch_directml.device()
-    print(f"DirectML device: {dml_device}")
 
     # Load model on CPU first, then move to DirectML
     model = whisper.load_model("medium", device="cpu")
     model = model.to(dml_device)
+    print("@@MODEL_READY", flush=True)
 
-    # Get audio duration for logging
+    # Get audio duration
     import whisper.audio
     audio = whisper.audio.load_audio(input_file)
     duration = len(audio) / whisper.audio.SAMPLE_RATE
-    print(f"משך הסרטון: {duration:.2f} שניות")
+    print(f"@@DURATION:{duration:.2f}", flush=True)
 
     # Transcribe — word_timestamps gives per-word timing
     result = model.transcribe(
@@ -186,8 +201,13 @@ def transcribe_directml(input_file, language, beam_size):
     # Convert to word objects matching our SRT writer interface
     words = []
     for seg in result.get("segments", []):
+        seg_words = []
         for w in seg.get("words", []):
-            words.append(_WordObj(w["word"], w["start"], w["end"]))
+            seg_words.append(_WordObj(w["word"], w["start"], w["end"]))
+        words.extend(seg_words)
+        text = " ".join(w.word.strip() for w in seg_words)
+        if text:
+            print(f"@@SEG:{seg.get('end', 0):.2f}|{text}", flush=True)
     return words
 
 
@@ -197,17 +217,22 @@ def transcribe_cpu(input_file, language, beam_size):
     """Transcribe with faster-whisper on CPU (no GPU acceleration)."""
     from faster_whisper import WhisperModel
 
-    print("Backend: faster-whisper (CPU fallback)")
+    print("@@BACKEND:faster-whisper CPU", flush=True)
+    print("@@MODEL_LOADING", flush=True)
     model = WhisperModel("medium", device="cpu", compute_type="int8")
+    print("@@MODEL_READY", flush=True)
 
     segments, info = model.transcribe(
         input_file, language=language, beam_size=beam_size, word_timestamps=True
     )
-    print(f"משך הסרטון: {info.duration:.2f} שניות")
+    duration = info.duration
+    print(f"@@DURATION:{duration:.2f}", flush=True)
 
     words = []
     for segment in segments:
         words.extend(segment.words)
+        text = " ".join(w.word.strip() for w in segment.words)
+        print(f"@@SEG:{segment.end:.2f}|{text}", flush=True)
     return words
 
 
@@ -243,6 +268,7 @@ def format_timestamp(seconds):
 
 def write_srt(words, output_file, max_words, do_rtl_fix):
     """Write words to SRT file, grouped by max_words per subtitle."""
+    print("@@WRITING_SRT", flush=True)
     with open(output_file, "w", encoding="utf-8-sig") as f:
         counter = 1
         for i in range(0, len(words), max_words):
@@ -257,8 +283,6 @@ def write_srt(words, output_file, max_words, do_rtl_fix):
             f.write(f"{counter}\n")
             f.write(f"{format_timestamp(start)} --> {format_timestamp(end)}\n")
             f.write(f"{phrase}\n\n")
-
-            print(f"[{format_timestamp(start)}] {phrase}")
             counter += 1
 
 
@@ -273,8 +297,6 @@ def main():
     output_file = sys.argv[2]
     max_words   = int(sys.argv[3]) if len(sys.argv) > 3 else 7
     do_rtl_fix  = sys.argv[4].lower() == "true" if len(sys.argv) > 4 else False
-
-    print(f"טוען מודל בינה מלאכותית... (תיקון עברית: {'פעיל' if do_rtl_fix else 'כבוי'})")
 
     # Detect GPU vendor
     vendor = detect_gpu_vendor()
@@ -303,7 +325,6 @@ def main():
     words = None
     for name, fn in backends:
         try:
-            print(f"מתחיל תמלול ({name}): {os.path.basename(input_file)}")
             words = fn(input_file, "he", 5)
             break
         except Exception as e:
@@ -315,7 +336,7 @@ def main():
         sys.exit(1)
 
     write_srt(words, output_file, max_words, do_rtl_fix)
-    print("SUCCESS: התמלול הסתיים!")
+    print("@@DONE", flush=True)
     # Force exit to prevent GPU library teardown crash
     os._exit(0)
 
