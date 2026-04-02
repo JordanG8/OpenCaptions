@@ -71,6 +71,25 @@ function findWavPreset() {
     return null;
 }
 
+function removeExistingSRT(srtPath) {
+    try {
+        var fileName = srtPath.replace(/^.*[\\\/]/, "").toLowerCase();
+        removeItemsFromBin(app.project.rootItem, fileName);
+        return '{"ok": "Cleaned"}';
+    } catch(e) { return '{"ok": "Nothing to clean"}'; }
+}
+
+function removeItemsFromBin(parent, fileName) {
+    for (var i = parent.children.numItems - 1; i >= 0; i--) {
+        var child = parent.children[i];
+        if (child.type === ProjectItemType.BIN) {
+            removeItemsFromBin(child, fileName);
+        } else if (child.name.toLowerCase() === fileName) {
+            try { child.remove(false, false); } catch(e) {}
+        }
+    }
+}
+
 function importSRT(srtPath) {
     try {
         var importOK = app.project.importFiles([srtPath], true, app.project.rootItem, false);

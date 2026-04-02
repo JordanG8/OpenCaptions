@@ -186,7 +186,10 @@ function initPaths() {
     pythonDir = path.join(extRoot, "python");
     tmpDir    = os.tmpdir();
     wavPath   = path.join(tmpDir, "opencaptions_audio.wav");
-    srtPath   = path.join(tmpDir, "opencaptions_captions.srt");
+    // SRT lives in a persistent folder so Premiere keeps a valid reference between sessions
+    var srtDir = path.join(process.env.APPDATA || os.tmpdir(), "OpenCaptions");
+    try { if (!fs.existsSync(srtDir)) fs.mkdirSync(srtDir, { recursive: true }); } catch(e) {}
+    srtPath   = path.join(srtDir, "opencaptions_captions.srt");
 
     var vendorPython = path.join(extRoot, "vendor", "python", "python.exe");
     var vendorFFmpeg = path.join(extRoot, "vendor", "ffmpeg");
@@ -306,7 +309,7 @@ function handleProgressMessage(msg) {
     }
     else if (msg.indexOf("@@MODEL_LOADING") === 0) {
         step2Title.textContent = "טוען מודל AI";
-        step2Subtitle.textContent = "טוען את מודל Whisper Medium לזיכרון...";
+        step2Subtitle.textContent = "טוען את מודל ivrit-ai (עברית) לזיכרון...";
         log("טוען מודל...", "py");
     }
     else if (msg.indexOf("@@MODEL_READY") === 0) {
@@ -332,6 +335,18 @@ function handleProgressMessage(msg) {
 
             // Update live preview (show last transcribed text)
             livePreview.innerHTML = escapeHtml(text) + ' <span class="cursor"></span>';
+        }
+    }
+    else if (msg.indexOf("@@BACKEND_FALLBACK:") === 0) {
+        var reason = msg.substring(19);
+        log("אזהרה: המעבד הגרפי נכשל (" + reason + ") — עובר למצב CPU", "warn");
+        var confirmed = confirm(
+            "המעבד הגרפי (GPU) לא זמין:\n" + reason +
+            "\n\nהתמלול ימשיך במצב CPU — יהיה איטי יותר (5-10 דקות לדקת שמע)." +
+            "\n\nהאם להמשיך?"
+        );
+        if (!confirmed) {
+            if (currentProcess) { isCancelled = true; currentProcess.kill(); }
         }
     }
     else if (msg.indexOf("@@WRITING_SRT") === 0) {
@@ -400,8 +415,8 @@ btnRetry.addEventListener("click", function() {
 // ── Cleanup ──────────────────────────────────────────────────
 
 function cleanup() {
+    // Only delete the WAV — SRT stays on disk so Premiere keeps a valid reference
     try { if (fs.existsSync(wavPath)) fs.unlinkSync(wavPath); } catch(e) {}
-    try { if (fs.existsSync(srtPath)) fs.unlinkSync(srtPath); } catch(e) {}
 }
 
 // ── Main generate flow ───────────────────────────────────────
@@ -442,9 +457,10 @@ btnGenerate.addEventListener("click", async function () {
         stopElapsedTimer();
         setStep(2, "done");
 
-        // Step 3: Import SRT
+        // Step 3: Import SRT (remove stale project reference first)
         setStep(3, "active");
         log("שלב 3/4 — מייבא כתוביות לפרויקט...");
+        await evalJSX('removeExistingSRT("' + srtPath.replace(/\\/g, "/") + '")').catch(function(){});
         await evalJSX('importSRT("' + srtPath.replace(/\\/g, "/") + '")');
         setStep(3, "done");
 

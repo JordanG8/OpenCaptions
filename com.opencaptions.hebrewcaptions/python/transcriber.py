@@ -339,12 +339,17 @@ def main():
 
     # Try each backend until one succeeds
     words = None
+    first_attempt = True
     for name, fn in backends:
         try:
             words = fn(input_file, "he", 5)
             break
         except Exception as e:
             print(f"{name} backend failed: {e}")
+            if first_attempt and name != "CPU":
+                # Signal to UI that we're falling back so it can warn the user
+                print(f"@@BACKEND_FALLBACK:{e}", flush=True)
+            first_attempt = False
             continue
 
     if not words:

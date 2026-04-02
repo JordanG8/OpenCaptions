@@ -121,7 +121,7 @@
         }
         .step-bar-fill {
             position: absolute;
-            top: 14px; left: 22px;
+            top: 14px; right: 22px;
             height: 2px; background: var(--accent-color);
             z-index: 2; width: 0; transition: width 0.4s ease;
         }
@@ -329,8 +329,9 @@
             transition: height 0.2s, padding 0.2s;
         }
         #log.open {
-            height: 90px; padding: 8px;
+            height: 180px; padding: 8px;
             overflow-y: auto;
+            resize: vertical;
         }
         .log-warn { color: #f1c40f; }
         .log-err { color: #e74c3c; font-weight: bold; }
