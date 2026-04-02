@@ -165,12 +165,17 @@ def transcribe_cuda(input_file, language, beam_size):
     print("@@BACKEND:faster-whisper CUDA", flush=True)
     print("@@MODEL_LOADING", flush=True)
     model_id = _resolve_model("ivrit-ai/whisper-large-v3-turbo-ct2")
-    # int8_float16 is more stable than float16 across CUDA versions, same speed
-    model = WhisperModel(model_id, device="cuda", compute_type="int8_float16")
+    # int8 is the most stable/memory-efficient CUDA compute type
+    model = WhisperModel(model_id, device="cuda", compute_type="int8",
+                         cpu_threads=4, num_workers=1)
     print("@@MODEL_READY", flush=True)
 
     segments, info = model.transcribe(
-        input_file, language=language, beam_size=beam_size, word_timestamps=True
+        input_file, language=language,
+        beam_size=1,                     # greedy — avoids beam search memory spikes
+        word_timestamps=True,
+        vad_filter=True,                 # skip silence chunks, reduces effective length
+        condition_on_previous_text=False, # prevents context accumulation across chunks
     )
     duration = info.duration
     print(f"@@DURATION:{duration:.2f}", flush=True)
