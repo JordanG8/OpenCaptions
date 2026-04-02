@@ -186,10 +186,10 @@ function initPaths() {
     pythonDir = path.join(extRoot, "python");
     tmpDir    = os.tmpdir();
     wavPath   = path.join(tmpDir, "opencaptions_audio.wav");
-    // SRT lives in a persistent folder so Premiere keeps a valid reference between sessions
-    var srtDir = path.join(process.env.APPDATA || os.tmpdir(), "OpenCaptions");
-    try { if (!fs.existsSync(srtDir)) fs.mkdirSync(srtDir, { recursive: true }); } catch(e) {}
-    srtPath   = path.join(srtDir, "opencaptions_captions.srt");
+    // srtPath is set fresh each run with a timestamp — see generateSrtPath()
+    var _srtDir = path.join(process.env.APPDATA || os.tmpdir(), "OpenCaptions");
+    try { if (!fs.existsSync(_srtDir)) fs.mkdirSync(_srtDir, { recursive: true }); } catch(e) {}
+    initPaths._srtDir = _srtDir;
 
     var vendorPython = path.join(extRoot, "vendor", "python", "python.exe");
     var vendorFFmpeg = path.join(extRoot, "vendor", "ffmpeg");
@@ -201,6 +201,11 @@ function initPaths() {
         pythonCmd = os.platform() === "win32" ? "python" : "python3";
     }
     return true;
+}
+
+function generateSrtPath() {
+    var ts = new Date().toISOString().replace(/[T:]/g, "-").replace(/\..+/, "");
+    srtPath = path.join(initPaths._srtDir, "opencaptions_" + ts + ".srt");
 }
 
 // ── ExtendScript bridge ──────────────────────────────────────
@@ -431,6 +436,7 @@ btnGenerate.addEventListener("click", async function () {
     resetStep2();
     setStatus("מעבד...", "working");
     btnCancel.style.display = "block";
+    generateSrtPath(); // fresh unique SRT path for this run
     cleanup();
 
     try {
@@ -472,10 +478,9 @@ btnGenerate.addEventListener("click", async function () {
         stopElapsedTimer();
         setStep(2, "done");
 
-        // Step 3: Import SRT (remove stale project reference first)
+        // Step 3: Import SRT (unique filename per run — no stale reference issues)
         setStep(3, "active");
         log("שלב 3/4 — מייבא כתוביות לפרויקט...");
-        await evalJSX('removeExistingSRT("' + srtPath.replace(/\\/g, "/") + '")').catch(function(){});
         await evalJSX('importSRT("' + srtPath.replace(/\\/g, "/") + '")');
         setStep(3, "done");
 
