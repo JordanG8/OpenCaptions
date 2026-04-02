@@ -46,8 +46,9 @@ function exportActiveSequenceAudio(outputPath, trackIndex) {
         }
         var outF = new File(outputPath);
         if (outF.exists) outF.remove();
+        $.sleep(200); // ensure file handle released before new export starts
         seq.exportAsMediaDirect(outF.fsName, wavPresetPath, 0);
-        $.sleep(1000);
+        $.sleep(1500); // give Premiere time to begin writing before JS polls for size
         if (typeof trackIndex !== "undefined" && trackIndex !== -1) {
             for (var k = 0; k < seq.audioTracks.numTracks; k++) {
                 seq.audioTracks[k].setMute(originalMuteStates[k]);

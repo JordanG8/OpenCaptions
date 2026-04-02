@@ -441,11 +441,24 @@ btnGenerate.addEventListener("click", async function () {
         log("שלב 1/4 — מייצא שמע מהסיקוונס...");
         await evalJSX('exportActiveSequenceAudio("' + wavPath.replace(/\\/g, "/") + '", ' + trackIdx + ')');
 
+        // Wait for WAV to appear, be non-empty, AND stop growing (export fully flushed)
         var start = Date.now();
-        while(!fs.existsSync(wavPath) || fs.statSync(wavPath).size === 0) {
+        var lastSize = -1;
+        var stableCount = 0;
+        while (true) {
             if (isCancelled) throw new Error("Cancelled");
-            if (Date.now() - start > 20000) throw new Error("הייצוא נכשל (Timeout)");
+            if (Date.now() - start > 60000) throw new Error("הייצוא נכשל (Timeout)");
             await new Promise(function(r) { setTimeout(r, 500); });
+            if (!fs.existsSync(wavPath)) { lastSize = -1; stableCount = 0; continue; }
+            var sz = fs.statSync(wavPath).size;
+            if (sz === 0) { lastSize = -1; stableCount = 0; continue; }
+            if (sz === lastSize) {
+                stableCount++;
+                if (stableCount >= 3) break; // size unchanged for 1.5s — export complete
+            } else {
+                lastSize = sz;
+                stableCount = 0;
+            }
         }
         setStep(1, "done");
 
