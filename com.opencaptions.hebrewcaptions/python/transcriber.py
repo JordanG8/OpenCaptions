@@ -178,30 +178,22 @@ def transcribe_cuda(input_file, language, beam_size):
     print("@@MODEL_READY", flush=True)
 
     # ── Split WAV into 28-second chunks ──────────────────────────
-    CHUNK_SECS = 28
-    chunks = []  # list of (start_offset_sec, temp_file_path)
+    CHUNK_SECS = 20
+    chunks = []  # list of (start_offset_sec, audio_data_or_path)
     try:
-        with wave.open(input_file, "rb") as wf:
-            total_frames = wf.getnframes()
-            rate = wf.getframerate()
-            channels = wf.getnchannels()
-            sampwidth = wf.getsampwidth()
-            total_duration = total_frames / rate
-            chunk_frames = int(CHUNK_SECS * rate)
-            offset = 0
-            while offset < total_frames:
-                end = min(offset + chunk_frames, total_frames)
-                wf.setpos(offset)
-                data = wf.readframes(end - offset)
-                tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
-                with wave.open(tmp.name, "wb") as out:
-                    out.setnchannels(channels)
-                    out.setsampwidth(sampwidth)
-                    out.setframerate(rate)
-                    out.writeframes(data)
-                chunks.append((offset / rate, tmp.name))
-                offset = end
+        from faster_whisper.audio import decode_audio
+        # decode_audio handles any format (including 32-bit float) and returns a 16kHz ndarray
+        audio_data = decode_audio(input_file, sampling_rate=16000)
+        total_frames = len(audio_data)
+        total_duration = total_frames / 16000.0
         print(f"@@DURATION:{total_duration:.2f}", flush=True)
+
+        chunk_frames = CHUNK_SECS * 16000
+        offset = 0
+        while offset < total_frames:
+            end = min(offset + chunk_frames, total_frames)
+            chunks.append((offset / 16000.0, audio_data[offset:end]))
+            offset = end
     except Exception as e:
         # Fallback: treat whole file as one chunk
         chunks = [(0.0, input_file)]
@@ -209,9 +201,9 @@ def transcribe_cuda(input_file, language, beam_size):
 
     # ── Transcribe each chunk, offsetting timestamps ──────────────
     all_words = []
-    for chunk_start, chunk_path in chunks:
+    for chunk_start, chunk_data in chunks:
         segs, _ = model.transcribe(
-            chunk_path, language=language,
+            chunk_data, language=language,
             beam_size=1,
             word_timestamps=True,
             condition_on_previous_text=False,
@@ -223,13 +215,8 @@ def transcribe_cuda(input_file, language, beam_size):
             all_words.extend(chunk_words)
             text = " ".join(w.word.strip() for w in chunk_words)
             print(f"@@SEG:{segment.end + chunk_start:.2f}|{text}", flush=True)
-        # Clean up temp chunk file
-        if chunk_path != input_file:
-            try: os.unlink(chunk_path)
-            except: pass
 
-    del model
-    gc.collect()
+    # Model is intentionally NOT deleted to prevent ctranslate2 0xC0000409 crash on teardown
     return all_words
 
 
@@ -410,9 +397,11 @@ def main():
 
     write_srt(words, output_file, max_words, do_rtl_fix)
     print("@@DONE", flush=True)
-    # Let Python exit naturally — ctranslate2 may crash during CUDA teardown,
-    # but @@DONE + SRT file already exist so main.js treats it as success.
-    # Natural exit also properly releases the CUDA context for subsequent runs.
+    # Hard exit to bypass python teardown and garbage collection.
+    # ctranslate2 heavily crashes (0xC0000409 / STATUS_STACK_BUFFER_OVERRUN) 
+    # during CUDA teardown or when the WhisperModel destructor is invoked.
+    # A hard exit prevents these buggy C++ destructors from running.
+    os._exit(0)
 
 
 if __name__ == "__main__":

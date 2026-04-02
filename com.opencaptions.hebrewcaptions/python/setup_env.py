@@ -39,9 +39,9 @@ def main():
         pip_exe = os.path.join(venv_dir, "bin", "pip")
         py_exe = os.path.join(venv_dir, "bin", "python")
 
-    # 3. Upgrade Pip
-    log("Upgrading pip...")
-    subprocess.check_call([py_exe, "-m", "pip", "install", "--upgrade", "pip"])
+    # 3. Upgrade Pip and install setuptools
+    log("Upgrading pip and installing setuptools...")
+    subprocess.check_call([py_exe, "-m", "pip", "install", "--upgrade", "pip", "setuptools<70"])
 
     # 4. Auto-detect GPU and install correct packages
     install_script = os.path.join(root_dir, "install_deps.py")

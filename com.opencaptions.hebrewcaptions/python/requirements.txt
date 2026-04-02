@@ -1,5 +1,6 @@
 # Base requirement (always needed for NVIDIA + CPU fallback)
 faster-whisper>=1.0.0
+ctranslate2==4.4.0
 
 # ── NVIDIA GPU (install these for CUDA acceleration) ──
 # nvidia-cublas-cu12

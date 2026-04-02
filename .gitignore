@@ -1,5 +1,5 @@
 # Virtual Environment
-python/venv/
+com.opencaptions.hebrewcaptions/python/venv/
 
 # Python cache
 __pycache__/

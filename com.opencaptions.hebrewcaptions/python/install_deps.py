@@ -116,7 +116,7 @@ def install_nvidia():
     print("\n  Detected: NVIDIA GPU")
     print("  Installing faster-whisper with CUDA support...\n")
 
-    s1 = pip_install(["faster-whisper>=1.0.0"], "faster-whisper", 1, 2)
+    s1 = pip_install(["faster-whisper>=1.0.0", "ctranslate2==4.4.0"], "faster-whisper", 1, 2)
     s2 = pip_install([
         "nvidia-cublas-cu12",
         "nvidia-cudnn-cu12",
@@ -139,7 +139,7 @@ def install_directml():
     s1 = pip_install(["torch>=2.1.0", "torchaudio>=2.1.0"], "PyTorch", 1, 4)
     s2 = pip_install(["torch-directml>=0.2.5"], "DirectML backend", 2, 4)
     s3 = pip_install(["openai-whisper>=20231117"], "OpenAI Whisper", 3, 4)
-    s4 = pip_install(["faster-whisper>=1.0.0"], "faster-whisper (CPU fallback)", 4, 4)
+    s4 = pip_install(["faster-whisper>=1.0.0", "ctranslate2==4.4.0"], "faster-whisper (CPU fallback)", 4, 4)
 
     if s1 and s2 and s3 and s4:
         print("\n" + "="*60)
@@ -152,7 +152,7 @@ def install_directml():
 def install_cpu():
     """Install CPU-only packages (minimal)."""
     print("\n  Installing CPU-only packages...")
-    s1 = pip_install(["faster-whisper>=1.0.0"], "faster-whisper (CPU)", 1, 1)
+    s1 = pip_install(["faster-whisper>=1.0.0", "ctranslate2==4.4.0"], "faster-whisper (CPU)", 1, 1)
 
     if s1:
         print("\n" + "="*60)
