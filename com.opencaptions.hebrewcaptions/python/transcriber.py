@@ -157,38 +157,80 @@ def setup_cuda_paths():
 # ── Backend: faster-whisper + CUDA (NVIDIA) ───────────────────
 
 def transcribe_cuda(input_file, language, beam_size):
-    """Transcribe with faster-whisper on NVIDIA CUDA GPU."""
+    """Transcribe with faster-whisper on NVIDIA CUDA GPU.
+
+    Pre-splits audio into <=28s chunks to avoid a ctranslate2 Windows bug
+    (STATUS_STACK_BUFFER_OVERRUN / 0xC0000409) that fires on chunk boundaries
+    inside the library's internal chunking loop.
+    """
     import gc
+    import wave
+    import struct
+    import tempfile
     setup_cuda_paths()
     from faster_whisper import WhisperModel
 
     print("@@BACKEND:faster-whisper CUDA", flush=True)
     print("@@MODEL_LOADING", flush=True)
     model_id = _resolve_model("ivrit-ai/whisper-large-v3-turbo-ct2")
-    # int8 is the most stable/memory-efficient CUDA compute type
     model = WhisperModel(model_id, device="cuda", compute_type="int8",
                          cpu_threads=4, num_workers=1)
     print("@@MODEL_READY", flush=True)
 
-    segments, info = model.transcribe(
-        input_file, language=language,
-        beam_size=1,                     # greedy — avoids beam search memory spikes
-        word_timestamps=True,
-        vad_filter=True,                 # skip silence chunks, reduces effective length
-        condition_on_previous_text=False, # prevents context accumulation across chunks
-    )
-    duration = info.duration
-    print(f"@@DURATION:{duration:.2f}", flush=True)
+    # ── Split WAV into 28-second chunks ──────────────────────────
+    CHUNK_SECS = 28
+    chunks = []  # list of (start_offset_sec, temp_file_path)
+    try:
+        with wave.open(input_file, "rb") as wf:
+            total_frames = wf.getnframes()
+            rate = wf.getframerate()
+            channels = wf.getnchannels()
+            sampwidth = wf.getsampwidth()
+            total_duration = total_frames / rate
+            chunk_frames = int(CHUNK_SECS * rate)
+            offset = 0
+            while offset < total_frames:
+                end = min(offset + chunk_frames, total_frames)
+                wf.setpos(offset)
+                data = wf.readframes(end - offset)
+                tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+                with wave.open(tmp.name, "wb") as out:
+                    out.setnchannels(channels)
+                    out.setsampwidth(sampwidth)
+                    out.setframerate(rate)
+                    out.writeframes(data)
+                chunks.append((offset / rate, tmp.name))
+                offset = end
+        print(f"@@DURATION:{total_duration:.2f}", flush=True)
+    except Exception as e:
+        # Fallback: treat whole file as one chunk
+        chunks = [(0.0, input_file)]
+        print(f"@@DURATION:0", flush=True)
 
-    words = []
-    for segment in segments:
-        words.extend(segment.words)
-        text = " ".join(w.word.strip() for w in segment.words)
-        print(f"@@SEG:{segment.end:.2f}|{text}", flush=True)
+    # ── Transcribe each chunk, offsetting timestamps ──────────────
+    all_words = []
+    for chunk_start, chunk_path in chunks:
+        segs, _ = model.transcribe(
+            chunk_path, language=language,
+            beam_size=1,
+            word_timestamps=True,
+            condition_on_previous_text=False,
+        )
+        for segment in segs:
+            chunk_words = []
+            for w in segment.words:
+                chunk_words.append(_WordObj(w.word, w.start + chunk_start, w.end + chunk_start))
+            all_words.extend(chunk_words)
+            text = " ".join(w.word.strip() for w in chunk_words)
+            print(f"@@SEG:{segment.end + chunk_start:.2f}|{text}", flush=True)
+        # Clean up temp chunk file
+        if chunk_path != input_file:
+            try: os.unlink(chunk_path)
+            except: pass
 
     del model
     gc.collect()
-    return words
+    return all_words
 
 
 # ── Backend: openai-whisper + DirectML (AMD / Intel / any DX12) ──
