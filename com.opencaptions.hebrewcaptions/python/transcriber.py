@@ -173,7 +173,7 @@ def transcribe_cuda(input_file, language, beam_size):
     print("@@BACKEND:faster-whisper CUDA", flush=True)
     print("@@MODEL_LOADING", flush=True)
     model_id = _resolve_model("ivrit-ai/whisper-large-v3-turbo-ct2")
-    model = WhisperModel(model_id, device="cuda", compute_type="int8",
+    model = WhisperModel(model_id, device="cuda", compute_type="float32",
                          cpu_threads=4, num_workers=1)
     print("@@MODEL_READY", flush=True)
 
