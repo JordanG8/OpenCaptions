@@ -11,7 +11,7 @@
 ; ============================================================
 
 #define MyAppName "OpenCaptions"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.2.0"
 #define MyAppPublisher "Jordan Goren"
 #define MyAppURL "https://github.com/JordanG8/OpenCaptions"
 
@@ -31,7 +31,12 @@ OutputBaseFilename=OpenCaptions-Setup-{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
+SetupIconFile=compiler:SetupClassicIcon.ico
+VersionInfoVersion=1.2.0
+VersionInfoCompany=Jordan Goren
+VersionInfoDescription=OpenCaptions - AI Hebrew Captions for Premiere Pro
+VersionInfoProductName=OpenCaptions
 DisableDirPage=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -41,7 +46,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Messages]
 WelcomeLabel1=Welcome to OpenCaptions
-WelcomeLabel2=This will install OpenCaptions — AI-powered Hebrew captions for Adobe Premiere Pro.%n%nEverything runs 100%% offline on your machine. No data leaves your computer.%n%nPython and FFmpeg are included — no extra installs needed.%n%nRequirements:%n  - Adobe Premiere Pro 2020+%n  - Internet connection (first install only, for AI packages + model)
+WelcomeLabel2=This will install OpenCaptions — AI-powered Hebrew captions for Adobe Premiere Pro.%n%nEverything runs 100%% offline on your machine. No data leaves your computer.%n%nPython, FFmpeg, and the AI model are all included — no extra downloads.%n%nIMPORTANT: Right-click the installer and select "Run as Administrator" if installation fails. This is needed to set Adobe registry keys.%n%nRequirements:%n  - Adobe Premiere Pro 2020+
 
 [Files]
 ; CEP Extension files (includes vendor/python and vendor/ffmpeg)
@@ -63,11 +68,7 @@ Root: HKCU; Subkey: "SOFTWARE\Adobe\CSXS.15"; ValueName: "PlayerDebugMode"; Valu
 Filename: "{app}\vendor\python\python.exe"; Parameters: "-u ""{app}\python\install_deps.py"""; \
   StatusMsg: "Installing AI packages (see console window for progress)..."; \
   Flags: waituntilterminated
-; Post-install: Download AI model using BUNDLED Python
-Filename: "{app}\vendor\python\python.exe"; Parameters: "-u ""{app}\python\download_model.py"""; \
-  StatusMsg: "Downloading AI model (see console window for progress)..."; \
-  Description: "Download AI model (required, ~1-2 GB)"; \
-  Flags: postinstall waituntilterminated
+; AI model is bundled in vendor/models/ — no download needed
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"

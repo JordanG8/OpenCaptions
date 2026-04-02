@@ -4,8 +4,8 @@ download_model.py — Pre-download Whisper models so they're cached locally.
 Usage:
     python download_model.py
 
-Downloads both:
-  - faster-whisper medium model (for NVIDIA CUDA + CPU backends)
+Downloads:
+  - ivrit-ai/whisper-large-v3-turbo-ct2 (Hebrew-optimized, for NVIDIA CUDA + CPU backends)
   - openai-whisper medium model (for DirectML backend, if packages installed)
 """
 
@@ -40,19 +40,19 @@ print(f"  Disk: {disk_stats()}")
 
 success = False
 
-# 1. faster-whisper model (always available)
+# 1. faster-whisper ivrit-ai model (always available)
 try:
     from faster_whisper import WhisperModel
-    print("\n  Downloading faster-whisper 'medium' model...")
-    print("  This may take several minutes on first run...\n")
+    print("\n  Downloading ivrit-ai/whisper-large-v3-turbo-ct2 model...")
+    print("  This is a Hebrew-optimized model (~1.6 GB, first run only)...\n")
     start = time.time()
-    model = WhisperModel("medium", device="cpu", compute_type="int8")
+    model = WhisperModel("ivrit-ai/whisper-large-v3-turbo-ct2", device="cpu", compute_type="int8")
     del model
     elapsed = time.time() - start
-    print(f"\n  faster-whisper model cached in {elapsed:.0f}s — Disk: {disk_stats()}")
+    print(f"\n  ivrit-ai model cached in {elapsed:.0f}s — Disk: {disk_stats()}")
     success = True
 except Exception as e:
-    print(f"  faster-whisper model download failed: {e}")
+    print(f"  ivrit-ai model download failed: {e}")
 
 # 2. openai-whisper model (only if installed — for DirectML backend)
 try:

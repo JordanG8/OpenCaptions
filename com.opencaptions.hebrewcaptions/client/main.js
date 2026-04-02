@@ -401,6 +401,7 @@ btnRetry.addEventListener("click", function() {
 
 function cleanup() {
     try { if (fs.existsSync(wavPath)) fs.unlinkSync(wavPath); } catch(e) {}
+    try { if (fs.existsSync(srtPath)) fs.unlinkSync(srtPath); } catch(e) {}
 }
 
 // ── Main generate flow ───────────────────────────────────────

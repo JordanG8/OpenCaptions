@@ -1,5 +1,7 @@
 # OpenCaptions — Installation Guide
 
+> **Note:** The installer must be run as Administrator (right-click → "Run as Administrator"). This is required to set Adobe CEP registry keys. Windows SmartScreen may also warn you — click "More info" → "Run anyway".
+
 ## Folder Structure
 
 ```

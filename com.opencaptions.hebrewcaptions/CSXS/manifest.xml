@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionManifest Version="6.0" ExtensionBundleId="com.opencaptions.hebrewcaptions"
-    ExtensionBundleVersion="1.0.0"
+    ExtensionBundleVersion="1.2.0"
     ExtensionBundleName="OpenCaptions Hebrew Captions"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
     <ExtensionList>
-        <Extension Id="com.opencaptions.hebrewcaptions.panel" Version="1.0.0" />
+        <Extension Id="com.opencaptions.hebrewcaptions.panel" Version="1.2.0" />
     </ExtensionList>
 
     <ExecutionEnvironment>

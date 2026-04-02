@@ -27,6 +27,7 @@ PYTHON_VERSION = "3.11.9"
 PYTHON_URL = f"https://www.python.org/ftp/python/{PYTHON_VERSION}/python-{PYTHON_VERSION}-embed-amd64.zip"
 GETPIP_URL = "https://bootstrap.pypa.io/get-pip.py"
 FFMPEG_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+WHISPER_MODEL_ID = "ivrit-ai/whisper-large-v3-turbo-ct2"
 
 # ── Paths ────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ EXTENSION_DIR = os.path.join(PROJECT_ROOT, "com.opencaptions.hebrewcaptions")
 VENDOR_DIR = os.path.join(EXTENSION_DIR, "vendor")
 PYTHON_DIR = os.path.join(VENDOR_DIR, "python")
 FFMPEG_DIR = os.path.join(VENDOR_DIR, "ffmpeg")
+MODELS_DIR = os.path.join(VENDOR_DIR, "models")
 DOWNLOAD_CACHE = os.path.join(SCRIPT_DIR, "_cache")
 
 
@@ -138,6 +140,43 @@ def setup_ffmpeg():
         log("WARNING: ffmpeg.exe not found after extraction!")
 
 
+def setup_model():
+    """Download the ivrit-ai Whisper model for bundling."""
+    model_dir_name = WHISPER_MODEL_ID.replace("/", "--")
+    dest = os.path.join(MODELS_DIR, model_dir_name)
+    if os.path.exists(os.path.join(dest, "model.bin")):
+        log("Whisper model already downloaded, skipping.")
+        return
+
+    log(f"Downloading {WHISPER_MODEL_ID} for bundling...")
+    os.makedirs(dest, exist_ok=True)
+    try:
+        from huggingface_hub import snapshot_download
+        snapshot_download(
+            repo_id=WHISPER_MODEL_ID,
+            local_dir=dest,
+            local_dir_use_symlinks=False,
+        )
+        model_bin = os.path.join(dest, "model.bin")
+        if os.path.exists(model_bin):
+            size_mb = os.path.getsize(model_bin) / 1024 / 1024
+            log(f"Model downloaded: {size_mb:.0f} MB")
+        else:
+            log("WARNING: model.bin not found after download!")
+    except ImportError:
+        log("huggingface_hub not installed. Installing...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "huggingface_hub"])
+        from huggingface_hub import snapshot_download
+        snapshot_download(
+            repo_id=WHISPER_MODEL_ID,
+            local_dir=dest,
+            local_dir_use_symlinks=False,
+        )
+        log("Model downloaded.")
+
+    log("Model setup complete.")
+
+
 def compile_installer():
     """Find ISCC.exe and compile the installer."""
     iss_file = os.path.join(SCRIPT_DIR, "opencaptions-installer.iss")
@@ -199,6 +238,7 @@ def main():
     if "--compile-only" not in args:
         setup_python()
         setup_ffmpeg()
+        setup_model()
 
     if "--deps-only" not in args:
         compile_installer()

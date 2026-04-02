@@ -29,6 +29,20 @@ import json
 sys.stdout.reconfigure(encoding='utf-8')
 
 
+# ── Model Resolution ─────────────────────────────────────────
+
+def _resolve_model(hf_model_id):
+    """Return local bundled model path if it exists, otherwise the HuggingFace model ID."""
+    # Check for model bundled by the installer (vendor/models/<model-name>/)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    ext_dir = os.path.dirname(script_dir)
+    local_path = os.path.join(ext_dir, "vendor", "models", hf_model_id.replace("/", "--"))
+    if os.path.isdir(local_path) and os.path.exists(os.path.join(local_path, "model.bin")):
+        print(f"Using bundled model: {local_path}", flush=True)
+        return local_path
+    return hf_model_id
+
+
 # ── GPU Detection ─────────────────────────────────────────────
 
 def detect_gpu_vendor():
@@ -149,7 +163,8 @@ def transcribe_cuda(input_file, language, beam_size):
 
     print("@@BACKEND:faster-whisper CUDA", flush=True)
     print("@@MODEL_LOADING", flush=True)
-    model = WhisperModel("medium", device="cuda", compute_type="float16")
+    model_id = _resolve_model("ivrit-ai/whisper-large-v3-turbo-ct2")
+    model = WhisperModel(model_id, device="cuda", compute_type="float16")
     print("@@MODEL_READY", flush=True)
 
     segments, info = model.transcribe(
@@ -219,7 +234,8 @@ def transcribe_cpu(input_file, language, beam_size):
 
     print("@@BACKEND:faster-whisper CPU", flush=True)
     print("@@MODEL_LOADING", flush=True)
-    model = WhisperModel("medium", device="cpu", compute_type="int8")
+    model_id = _resolve_model("ivrit-ai/whisper-large-v3-turbo-ct2")
+    model = WhisperModel(model_id, device="cpu", compute_type="int8")
     print("@@MODEL_READY", flush=True)
 
     segments, info = model.transcribe(
