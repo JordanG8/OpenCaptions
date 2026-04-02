@@ -158,13 +158,15 @@ def setup_cuda_paths():
 
 def transcribe_cuda(input_file, language, beam_size):
     """Transcribe with faster-whisper on NVIDIA CUDA GPU."""
+    import gc
     setup_cuda_paths()
     from faster_whisper import WhisperModel
 
     print("@@BACKEND:faster-whisper CUDA", flush=True)
     print("@@MODEL_LOADING", flush=True)
     model_id = _resolve_model("ivrit-ai/whisper-large-v3-turbo-ct2")
-    model = WhisperModel(model_id, device="cuda", compute_type="float16")
+    # int8_float16 is more stable than float16 across CUDA versions, same speed
+    model = WhisperModel(model_id, device="cuda", compute_type="int8_float16")
     print("@@MODEL_READY", flush=True)
 
     segments, info = model.transcribe(
@@ -178,6 +180,9 @@ def transcribe_cuda(input_file, language, beam_size):
         words.extend(segment.words)
         text = " ".join(w.word.strip() for w in segment.words)
         print(f"@@SEG:{segment.end:.2f}|{text}", flush=True)
+
+    del model
+    gc.collect()
     return words
 
 

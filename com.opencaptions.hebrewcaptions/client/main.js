@@ -280,6 +280,8 @@ function runPython(inputWav, outputSrt, maxWords, doRtlFix) {
             currentProcess = null;
             if (isCancelled) reject(new Error("Cancelled"));
             else if (code === 0 || (workSuccess && fs.existsSync(outputSrt))) resolve();
+            else if (code === 3221226505 || code === -1073740791) // 0xC0000409 CUDA crash
+                reject(new Error("קריסת CUDA — נסה שוב, או בדוק דרייברים (קוד: " + code + ")"));
             else reject(new Error("Python exited " + code));
         });
     });
