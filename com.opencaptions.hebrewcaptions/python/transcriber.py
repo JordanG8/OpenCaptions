@@ -363,8 +363,9 @@ def main():
 
     write_srt(words, output_file, max_words, do_rtl_fix)
     print("@@DONE", flush=True)
-    # Force exit to prevent GPU library teardown crash
-    os._exit(0)
+    # Let Python exit naturally — ctranslate2 may crash during CUDA teardown,
+    # but @@DONE + SRT file already exist so main.js treats it as success.
+    # Natural exit also properly releases the CUDA context for subsequent runs.
 
 
 if __name__ == "__main__":
